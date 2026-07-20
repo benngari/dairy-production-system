@@ -40,6 +40,21 @@ const RecipeVersionSchema = new mongoose.Schema(
   { _id: false }
 );
 
+// Standard bottle/package sizes used across the app for both pricing
+// (Recipe.priceList) and physical bottle stock (Packaging model).
+const PACKAGE_SIZES = ['500ml', '1L', '2L', '3L', '5L'];
+
+// Selling price for one packaged unit of this recipe's finished product.
+// Kept PER RECIPE so Yogurt and Mala (or any other product) can each have
+// their own price list, exactly as the client's pricing notes show.
+const PriceListEntrySchema = new mongoose.Schema(
+  {
+    size: { type: String, enum: PACKAGE_SIZES, required: true },
+    price: { type: Number, required: true, min: 0 },
+  },
+  { _id: false }
+);
+
 const RecipeSchema = new mongoose.Schema(
   {
     name: {
@@ -88,6 +103,27 @@ const RecipeSchema = new mongoose.Schema(
       ref: 'Recipe',
       default: null,
     },
+    // ==== Costing & Profit fields ====
+    laborCost: {
+      type: Number,
+      default: 0,
+      min: 0,
+      // Flat labour cost applied per production batch for this recipe
+      // (e.g. "350 ksh per person" from the client's costing notes).
+    },
+    consumablesPercent: {
+      type: Number,
+      default: 5,
+      min: 0,
+      // Consumables markup, applied as a % of (labour cost + total
+      // ingredient cost) when calculating total budget cost.
+    },
+    priceList: {
+      type: [PriceListEntrySchema],
+      default: [],
+      // Selling price per bottle size for THIS recipe's finished product
+      // (e.g. Yogurt 5L @ 700, Mala 5L @ 550).
+    },
   },
   { timestamps: true }
 );
@@ -103,3 +139,4 @@ RecipeSchema.set('toJSON', { virtuals: true });
 RecipeSchema.set('toObject', { virtuals: true });
 
 module.exports = mongoose.model('Recipe', RecipeSchema);
+module.exports.PACKAGE_SIZES = PACKAGE_SIZES;
