@@ -20,6 +20,16 @@ const IngredientSchema = new mongoose.Schema(
       enum: ['Liters', 'Kilograms', 'Grams', 'Milliliters'],
       default: 'Kilograms',
     },
+    unitCost: {
+      type: Number,
+      required: [true, 'Unit cost is required for automatic cost calculation'],
+      default: 0,
+      min: 0,
+      // Cost of ONE unit of this ingredient's `unit` field (e.g. cost per
+      // Kilogram if unit = 'Kilograms', cost per Liter if unit = 'Liters').
+      // Used by the Costing Engine to automatically compute ingredient cost
+      // from the quantity the Formula Engine calculates for a batch.
+    },
     isActive: {
       type: Boolean,
       default: true,
