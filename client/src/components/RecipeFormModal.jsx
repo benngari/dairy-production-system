@@ -4,6 +4,7 @@ import { FiPlus, FiTrash2 } from 'react-icons/fi';
 import Modal from './Modal';
 import api from '../services/api';
 import { useToast } from '../context/ToastContext';
+import { PACKAGE_SIZES } from './AddPackagingModal';
 
 const UNITS = ['Liters', 'Kilograms', 'Grams', 'Milliliters'];
 
@@ -33,6 +34,12 @@ const RecipeFormModal = ({ isOpen, recipe, onClose, onSaved }) => {
           percentage: i.percentage,
           unit: i.unit,
         })) || [],
+      laborCost: recipe?.laborCost ?? 0,
+      consumablesPercent: recipe?.consumablesPercent ?? 5,
+      priceList: PACKAGE_SIZES.map((size) => ({
+        size,
+        price: recipe?.priceList?.find((p) => p.size === size)?.price ?? 0,
+      })),
     },
   });
 
@@ -75,6 +82,9 @@ const RecipeFormModal = ({ isOpen, recipe, onClose, onSaved }) => {
       const payload = {
         ...values,
         yieldPercentage: Number(values.yieldPercentage),
+        laborCost: Number(values.laborCost) || 0,
+        consumablesPercent: Number(values.consumablesPercent) || 0,
+        priceList: values.priceList.map((p) => ({ size: p.size, price: Number(p.price) || 0 })),
         ingredients: values.ingredients.map((i) => ({
           ingredient: i.ingredient,
           percentage: Number(i.percentage),
@@ -194,6 +204,39 @@ const RecipeFormModal = ({ isOpen, recipe, onClose, onSaved }) => {
           <p className="text-xs text-slate-400 mt-2">
             Ingredients are unavailable? Add them first from the Inventory page, then return here to build the recipe.
           </p>
+        </div>
+
+        <div className="border-t border-slate-100 pt-4">
+          <label className="label !mb-2">Costing &amp; Pricing</label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="label text-xs">Labour Cost (per batch)</label>
+              <input type="number" step="0.01" className="input" {...register('laborCost', { min: 0 })} />
+            </div>
+            <div>
+              <label className="label text-xs">Consumables (% markup)</label>
+              <input type="number" step="0.01" className="input" {...register('consumablesPercent', { min: 0 })} />
+            </div>
+          </div>
+
+          <label className="label text-xs">Selling Price per Bottle Size</label>
+          <p className="text-xs text-slate-400 mb-2">
+            Set this recipe's own price list — different products (e.g. Yogurt vs Mala) can charge different prices per size.
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+            {PACKAGE_SIZES.map((size, index) => (
+              <div key={size}>
+                <label className="label text-xs !mb-1">{size}</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  placeholder="Ksh"
+                  className="input"
+                  {...register(`priceList.${index}.price`, { min: 0 })}
+                />
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="flex justify-end gap-3 pt-2 border-t border-slate-100">

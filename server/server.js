@@ -36,6 +36,8 @@ app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/recipes', require('./routes/recipeRoutes'));
 app.use('/api/ingredients', require('./routes/ingredientRoutes'));
 app.use('/api/inventory', require('./routes/inventoryRoutes'));
+app.use('/api/packaging', require('./routes/packagingRoutes'));
+app.use('/api/costing', require('./routes/costingRoutes'));
 app.use('/api/production', require('./routes/productionRoutes'));
 app.use('/api/dashboard', require('./routes/dashboardRoutes'));
 app.use('/api/reports', require('./routes/reportRoutes'));

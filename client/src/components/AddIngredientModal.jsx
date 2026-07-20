@@ -8,7 +8,7 @@ const UNITS = ['Liters', 'Kilograms', 'Grams', 'Milliliters'];
 
 const AddIngredientModal = ({ isOpen, onClose, onSaved }) => {
   const { register, handleSubmit, formState: { errors } } = useForm({
-    defaultValues: { unit: 'Kilograms', minimumStock: 0 },
+    defaultValues: { unit: 'Kilograms', minimumStock: 0, unitCost: 0 },
   });
   const [saving, setSaving] = useState(false);
   const toast = useToast();
@@ -19,6 +19,7 @@ const AddIngredientModal = ({ isOpen, onClose, onSaved }) => {
       await api.post('/ingredients', {
         ...values,
         minimumStock: Number(values.minimumStock),
+        unitCost: Number(values.unitCost) || 0,
       });
       toast.success('Ingredient added successfully');
       onSaved();
@@ -51,6 +52,11 @@ const AddIngredientModal = ({ isOpen, onClose, onSaved }) => {
               </option>
             ))}
           </select>
+        </div>
+        <div>
+          <label className="label">Unit Cost (cost per 1 unit, e.g. per Kg)</label>
+          <input type="number" step="0.01" className="input" placeholder="e.g. 178" {...register('unitCost', { min: 0 })} />
+          <p className="text-xs text-slate-400 mt-1">Used to automatically calculate ingredient cost in the Profit Calculator.</p>
         </div>
         <div>
           <label className="label">Minimum Stock (for low stock alerts)</label>

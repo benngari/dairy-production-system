@@ -3,14 +3,17 @@ import { useForm } from 'react-hook-form';
 import Modal from './Modal';
 import api from '../services/api';
 import { useToast } from '../context/ToastContext';
+import { PACKAGE_SIZES } from './AddPackagingModal';
 
-const EditInventoryModal = ({ isOpen, item, onClose, onSaved }) => {
+const EditPackagingModal = ({ isOpen, item, onClose, onSaved }) => {
   const { register, handleSubmit } = useForm({
     defaultValues: {
+      name: item.name,
+      size: item.size,
       stock: item.stock,
       minimumStock: item.minimumStock,
+      unitCost: item.unitCost || 0,
       supplier: item.supplier || '',
-      unitCost: item.ingredient?.unitCost ?? 0,
       reason: '',
     },
   });
@@ -20,41 +23,51 @@ const EditInventoryModal = ({ isOpen, item, onClose, onSaved }) => {
   const onSubmit = async (values) => {
     setSaving(true);
     try {
-      await api.put(`/inventory/${item._id}`, {
+      await api.put(`/packaging/${item._id}`, {
+        name: values.name,
+        size: values.size,
         stock: Number(values.stock),
         minimumStock: Number(values.minimumStock),
+        unitCost: Number(values.unitCost) || 0,
         supplier: values.supplier,
         reason: values.reason,
       });
-      // Unit cost lives on the Ingredient master record, not the Inventory
-      // stock record, so it's saved via a separate call.
-      if (item.ingredient?._id) {
-        await api.put(`/ingredients/${item.ingredient._id}`, {
-          unitCost: Number(values.unitCost) || 0,
-        });
-      }
-      toast.success('Inventory updated successfully');
+      toast.success('Packaging updated successfully');
       onSaved();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to update inventory');
+      toast.error(err.response?.data?.message || 'Failed to update packaging');
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={`Edit — ${item.ingredient?.name}`} size="sm">
+    <Modal isOpen={isOpen} onClose={onClose} title={`Edit — ${item.name}`} size="sm">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
-          <label className="label">Stock Quantity ({item.unit})</label>
-          <input type="number" step="0.01" className="input" {...register('stock', { required: true, min: 0 })} />
+          <label className="label">Bottle Name</label>
+          <input className="input" {...register('name', { required: true })} />
         </div>
         <div>
-          <label className="label">Minimum Stock ({item.unit})</label>
-          <input type="number" step="0.01" className="input" {...register('minimumStock', { required: true, min: 0 })} />
+          <label className="label">Size</label>
+          <select className="input" {...register('size', { required: true })}>
+            {PACKAGE_SIZES.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
         </div>
         <div>
-          <label className="label">Unit Cost (cost per {item.unit})</label>
+          <label className="label">Stock Quantity (bottles)</label>
+          <input type="number" step="1" className="input" {...register('stock', { required: true, min: 0 })} />
+        </div>
+        <div>
+          <label className="label">Minimum Stock (bottles)</label>
+          <input type="number" step="1" className="input" {...register('minimumStock', { required: true, min: 0 })} />
+        </div>
+        <div>
+          <label className="label">Unit Cost (cost per bottle)</label>
           <input type="number" step="0.01" className="input" {...register('unitCost', { min: 0 })} />
         </div>
         <div>
@@ -78,4 +91,4 @@ const EditInventoryModal = ({ isOpen, item, onClose, onSaved }) => {
   );
 };
 
-export default EditInventoryModal;
+export default EditPackagingModal;

@@ -8,7 +8,7 @@ exports.getInventory = async (req, res, next) => {
     const { search, lowStockOnly, page = 1, limit = 50 } = req.query;
 
     let items = await Inventory.find()
-      .populate('ingredient', 'name category unit isActive')
+      .populate('ingredient', 'name category unit unitCost isActive')
       .sort('-createdAt');
 
     if (search) {
@@ -42,7 +42,7 @@ exports.getInventory = async (req, res, next) => {
 exports.getInventoryItem = async (req, res, next) => {
   try {
     const item = await Inventory.findById(req.params.id)
-      .populate('ingredient', 'name category unit')
+      .populate('ingredient', 'name category unit unitCost')
       .populate('transactions.performedBy', 'name');
     if (!item) return res.status(404).json({ success: false, message: 'Inventory item not found' });
     res.status(200).json({ success: true, item });
@@ -124,7 +124,7 @@ exports.deleteInventory = async (req, res, next) => {
 // @route   GET /api/inventory/alerts/low-stock
 exports.getLowStockAlerts = async (req, res, next) => {
   try {
-    const items = await Inventory.find().populate('ingredient', 'name category unit');
+    const items = await Inventory.find().populate('ingredient', 'name category unit unitCost');
     const lowStock = items.filter((i) => i.stock <= i.minimumStock);
     res.status(200).json({ success: true, count: lowStock.length, items: lowStock });
   } catch (error) {

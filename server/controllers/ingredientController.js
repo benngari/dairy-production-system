@@ -21,12 +21,12 @@ exports.getIngredients = async (req, res, next) => {
 // @route   POST /api/ingredients
 exports.createIngredient = async (req, res, next) => {
   try {
-    const { name, category, unit, minimumStock, supplier } = req.body;
+    const { name, category, unit, unitCost, minimumStock, supplier } = req.body;
     if (!name || !unit) {
       return res.status(400).json({ success: false, message: 'Name and unit are required' });
     }
 
-    const ingredient = await Ingredient.create({ name, category, unit });
+    const ingredient = await Ingredient.create({ name, category, unit, unitCost: unitCost || 0 });
 
     await Inventory.create({
       ingredient: ingredient._id,
@@ -46,10 +46,10 @@ exports.createIngredient = async (req, res, next) => {
 // @route   PUT /api/ingredients/:id
 exports.updateIngredient = async (req, res, next) => {
   try {
-    const { name, category, unit, isActive } = req.body;
+    const { name, category, unit, unitCost, isActive } = req.body;
     const ingredient = await Ingredient.findByIdAndUpdate(
       req.params.id,
-      { name, category, unit, isActive },
+      { name, category, unit, unitCost, isActive },
       { new: true, runValidators: true }
     );
     if (!ingredient) return res.status(404).json({ success: false, message: 'Ingredient not found' });

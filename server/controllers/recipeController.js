@@ -83,7 +83,7 @@ const resolveIngredients = async (ingredientsInput) => {
 // @route   POST /api/recipes
 exports.createRecipe = async (req, res, next) => {
   try {
-    const { name, description, category, yieldPercentage, status, ingredients } = req.body;
+    const { name, description, category, yieldPercentage, status, ingredients, laborCost, consumablesPercent, priceList } = req.body;
 
     if (!name) return res.status(400).json({ success: false, message: 'Recipe name is required' });
 
@@ -96,6 +96,9 @@ exports.createRecipe = async (req, res, next) => {
       yieldPercentage: yieldPercentage ?? 100,
       status: status || 'Active',
       ingredients: resolvedIngredients,
+      laborCost: laborCost ?? 0,
+      consumablesPercent: consumablesPercent ?? 5,
+      priceList: priceList || [],
       createdBy: req.user._id,
       currentVersion: 1,
       versionHistory: [
@@ -123,7 +126,7 @@ exports.updateRecipe = async (req, res, next) => {
     const recipe = await Recipe.findById(req.params.id);
     if (!recipe) return res.status(404).json({ success: false, message: 'Recipe not found' });
 
-    const { name, description, category, yieldPercentage, status, ingredients } = req.body;
+    const { name, description, category, yieldPercentage, status, ingredients, laborCost, consumablesPercent, priceList } = req.body;
 
     if (ingredients) {
       recipe.ingredients = await resolveIngredients(ingredients);
@@ -133,6 +136,11 @@ exports.updateRecipe = async (req, res, next) => {
     if (category !== undefined) recipe.category = category;
     if (yieldPercentage !== undefined) recipe.yieldPercentage = yieldPercentage;
     if (status !== undefined) recipe.status = status;
+    // Costing fields are pricing/labour metadata, not part of the formula
+    // itself, so changing them does not bump the version history.
+    if (laborCost !== undefined) recipe.laborCost = laborCost;
+    if (consumablesPercent !== undefined) recipe.consumablesPercent = consumablesPercent;
+    if (priceList !== undefined) recipe.priceList = priceList;
 
     recipe.currentVersion += 1;
     recipe.versionHistory.push({
