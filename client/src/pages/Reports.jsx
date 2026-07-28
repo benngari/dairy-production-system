@@ -81,8 +81,37 @@ const Reports = () => {
     }
   };
 
-  const handleExportPDF = () => window.open('/api/reports/export/pdf', '_blank');
-  const handleExportExcel = () => window.open('/api/reports/export/excel', '_blank');
+  const handleExportPDF = async () => {
+    try {
+      const res = await api.get('/reports/export/pdf', { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'production_report.pdf');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Error exporting PDF');
+    }
+  };
+
+  const handleExportExcel = async () => {
+    try {
+      const res = await api.get('/reports/export/excel', { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'production_report.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Error exporting Excel');
+    }
+  };
 
   const tabs = [
     { id: 'history', label: 'Production History' },

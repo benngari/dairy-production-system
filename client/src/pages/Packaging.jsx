@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/client';
 import toast from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
 
 const BOTTLE_SIZES = ['500ml', '1L', '2L', '3L', '5L'];
 
 const Packaging = () => {
+  const { user } = useAuth();
   const [items, setItems] = useState([]);
   const [form, setForm] = useState({ size: '500ml', stock: 0, minStock: 10, unitCost: 0, supplier: '' });
   const [editing, setEditing] = useState(null);
@@ -40,6 +42,17 @@ const Packaging = () => {
     await api.patch(`/packaging/${id}/stock`, { quantity, note: 'Manual' });
     fetchItems();
     toast.success('Stock adjusted');
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this packaging size? This cannot be undone.')) return;
+    try {
+      await api.delete(`/packaging/${id}`);
+      toast.success('Packaging deleted');
+      fetchItems();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Error deleting packaging');
+    }
   };
 
   return (
@@ -80,7 +93,10 @@ const Packaging = () => {
               <td>
                 <button onClick={() => { setEditing(item._id); setForm(item); }} className="text-blue-600 mr-2">Edit</button>
                 <button onClick={() => handleAdjust(item._id, 10)} className="text-green-600 mr-2">+10</button>
-                <button onClick={() => handleAdjust(item._id, -10)} className="text-red-600">-10</button>
+                <button onClick={() => handleAdjust(item._id, -10)} className="text-red-600 mr-2">-10</button>
+                {user?.role === 'Administrator' && (
+                  <button onClick={() => handleDelete(item._id)} className="text-red-800 font-semibold">Delete</button>
+                )}
               </td>
             </tr>
           ))}

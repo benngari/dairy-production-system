@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/client';
 import toast from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
 
 const Inventory = () => {
+  const { user } = useAuth();
   const [items, setItems] = useState([]);
   const [form, setForm] = useState({ name: '', unit: '', stock: 0, minStock: 10, supplier: '', unitCost: 0 });
   const [editing, setEditing] = useState(null);
@@ -38,6 +40,17 @@ const Inventory = () => {
     await api.patch(`/ingredients/${id}/stock`, { quantity, note: 'Manual adjustment' });
     fetchItems();
     toast.success('Stock adjusted');
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this ingredient? This cannot be undone.')) return;
+    try {
+      await api.delete(`/ingredients/${id}`);
+      toast.success('Ingredient deleted');
+      fetchItems();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Error deleting ingredient');
+    }
   };
 
   return (
@@ -77,7 +90,10 @@ const Inventory = () => {
               <td>
                 <button onClick={() => { setEditing(item._id); setForm(item); }} className="text-blue-600 mr-2">Edit</button>
                 <button onClick={() => handleAdjust(item._id, 10)} className="text-green-600 mr-2">+10</button>
-                <button onClick={() => handleAdjust(item._id, -10)} className="text-red-600">-10</button>
+                <button onClick={() => handleAdjust(item._id, -10)} className="text-red-600 mr-2">-10</button>
+                {user?.role === 'Administrator' && (
+                  <button onClick={() => handleDelete(item._id)} className="text-red-800 font-semibold">Delete</button>
+                )}
               </td>
             </tr>
           ))}
