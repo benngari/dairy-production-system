@@ -7,7 +7,8 @@ const {
   createProduction,
   getProductions,
   getProductionById,
-  checkStore
+  checkStore,
+  deleteProduction
 } = require('../controllers/productionController');
 
 router.post('/calculate', protect, calculateProduction);
@@ -17,5 +18,6 @@ router.route('/')
   .get(protect, getProductions);
 
 router.get('/:id', protect, getProductionById);
+router.delete('/:id', protect, authorize('Administrator'), deleteProduction);
 
 module.exports = router;

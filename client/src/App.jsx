@@ -14,6 +14,7 @@ import Packaging from './pages/Packaging';
 import ProfitCalculator from './pages/ProfitCalculator';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
+import Users from './pages/Users';
 
 function AppRoutes() {
   const { user } = useAuth();
@@ -34,6 +35,7 @@ function AppRoutes() {
         <Route path="profit" element={<ProfitCalculator />} />
         <Route path="reports" element={<Reports />} />
         <Route path="settings" element={<Settings />} />
+        <Route path="users" element={user?.role === 'Administrator' ? <Users /> : <Navigate to="/" />} />
       </Route>
     </Routes>
   );

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/client';
+import { useAuth } from '../context/AuthContext';
+import toast from 'react-hot-toast';
 
 const Reports = () => {
   const [tab, setTab] = useState('history');
@@ -12,6 +14,8 @@ const Reports = () => {
 
   const [ingredientUsage, setIngredientUsage] = useState([]);
   const [consumption, setConsumption] = useState({ ingredients: [], packaging: [] });
+
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchHistory();
@@ -32,6 +36,21 @@ const Reports = () => {
       setHistory(res.data || []); // guard against missing/malformed response
     } catch (err) {
       setHistory([]);
+    }
+  };
+
+  const handleDeleteBatch = async (item) => {
+    if (!item.productionId) {
+      toast.error('This record has no linked batch to delete (legacy data)');
+      return;
+    }
+    if (!window.confirm('Delete this batch? This restores ingredient and bottle stock.')) return;
+    try {
+      await api.delete(`/production/${item.productionId}`);
+      toast.success('Batch deleted, stock restored');
+      fetchHistory();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Error deleting batch');
     }
   };
 
@@ -118,6 +137,7 @@ const Reports = () => {
                 <th>Profit</th>
                 <th>Status</th>
                 <th>User</th>
+                {user?.role === 'Administrator' && <th>Actions</th>}
               </tr>
             </thead>
             <tbody>
@@ -134,6 +154,13 @@ const Reports = () => {
                   <td>{item.profit != null ? `KSh ${item.profit.toFixed(2)}` : '-'}</td>
                   <td>{item.status}</td>
                   <td>{item.user}</td>
+                  {user?.role === 'Administrator' && (
+                    <td>
+                      <button onClick={() => handleDeleteBatch(item)} className="text-red-600 text-sm hover:underline">
+                        Delete
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

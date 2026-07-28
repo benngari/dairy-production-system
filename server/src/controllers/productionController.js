@@ -407,4 +407,47 @@ exports.getProductionById = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
+  // DELETE /api/production/:id — Administrator only.
+// Reverses the batch: restores ingredient stock and bottle stock that were
+// deducted when it was recorded, then removes the Production and its
+// ProductionHistory entry. Legacy recipe-based records are handled the
+// same way via their own ingredientsUsed/packagingUsed arrays.
+exports.deleteProduction = async (req, res) => {
+  try {
+    const production = await Production.findById(req.params.id);
+    if (!production) return res.status(404).json({ message: 'Production not found' });
+
+    // Restore ingredient stock (covers both new batch ingredientsUsed and legacy)
+    for (const item of production.ingredientsUsed || []) {
+      if (!item.ingredientId || !item.quantity) continue;
+      const ing = await Ingredient.findById(item.ingredientId);
+      if (ing) {
+        ing.stock += item.quantity;
+        ing.transactions.push({ type: 'adjustment', quantity: item.quantity, note: 'Batch deleted — stock restored' });
+        await ing.save();
+      }
+    }
+
+    // Restore bottle stock — new batches use `packaging`, legacy uses `packagingUsed`
+    const packagingEntries = (production.packaging && production.packaging.length)
+      ? production.packaging
+      : (production.packagingUsed || []);
+    for (const p of packagingEntries) {
+      if (!p.size || !p.bottles) continue;
+      const pack = await Packaging.findOne({ size: p.size });
+      if (pack) {
+        pack.stock += p.bottles;
+        pack.transactions.push({ type: 'adjustment', quantity: p.bottles, note: 'Batch deleted — stock restored' });
+        await pack.save();
+      }
+    }
+
+    await ProductionHistory.deleteOne({ productionId: production._id });
+    await Production.findByIdAndDelete(req.params.id);
+
+    res.json({ message: 'Production batch deleted and stock restored' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 };

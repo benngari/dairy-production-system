@@ -15,6 +15,7 @@ const Sidebar = () => {
   ];
   if (user?.role === 'Administrator') {
     links.push({ to: '/settings', label: 'Settings', icon: '⚙️' });
+    links.push({ to: '/users', label: 'User Management', icon: '👥' });
   }
 
   return (
