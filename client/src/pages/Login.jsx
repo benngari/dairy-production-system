@@ -32,7 +32,7 @@ const Login = () => {
         <div className="relative z-10 flex flex-col justify-end p-12 text-white">
           <h1 className="text-3xl font-bold mb-2">Dairy Production System</h1>
           <p className="text-green-50 text-sm max-w-md">
-            Manage yoghurt and mala production, inventory, packaging, and reports — all in one place.
+            Manage yoghurt and mala production, inventory, packaging, and reports  all in one place.
           </p>
         </div>
       </div>
