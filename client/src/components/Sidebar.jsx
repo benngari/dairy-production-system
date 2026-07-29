@@ -13,8 +13,10 @@ const Sidebar = () => {
     { to: '/profit', label: 'Profit Calculator', icon: '💰' },
     { to: '/reports', label: 'Reports', icon: '📈' },
   ];
-  if (user?.role === 'Administrator') {
+  if (user?.role === 'Administrator' || user?.role === 'Manager') {
     links.push({ to: '/settings', label: 'Settings', icon: '⚙️' });
+  }
+  if (user?.role === 'Administrator') {
     links.push({ to: '/users', label: 'User Management', icon: '👥' });
   }
 
