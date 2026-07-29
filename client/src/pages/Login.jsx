@@ -32,23 +32,27 @@ const Login = () => {
         <div className="relative z-10 flex flex-col justify-end p-12 text-white">
           <h1 className="text-3xl font-bold mb-2">Dairy Production System</h1>
           <p className="text-green-50 text-sm max-w-md">
-            Manage yoghurt and mala production, inventory, packaging, and reports  all in one place.
+            Manage yoghurt and mala production, inventory, packaging, and reports — all in one place.
           </p>
         </div>
       </div>
 
-      {/* Right panel — login form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center bg-gray-50 px-6 py-12">
-        <div className="w-full max-w-sm">
+      {/* Right panel — dairy-themed background: warm cream fading into soft pasture green */}
+      <div className="w-full lg:w-1/2 relative flex items-center justify-center bg-gradient-to-br from-amber-50 via-white to-green-50 px-6 py-12 overflow-hidden">
+        {/* Decorative soft blobs — evoke milk pooling / pasture, purely visual, no layout impact */}
+        <div className="absolute -top-24 -right-24 w-72 h-72 bg-green-100 rounded-full blur-3xl opacity-60 pointer-events-none" />
+        <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-amber-100 rounded-full blur-3xl opacity-60 pointer-events-none" />
+
+        <div className="relative z-10 w-full max-w-sm">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-100 mb-3">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white shadow-sm border border-green-100 mb-3">
               <span className="text-2xl">🥛</span>
             </div>
             <h2 className="text-2xl font-bold text-gray-900">Welcome back</h2>
             <p className="text-sm text-gray-500 mt-1">Log in to your Dairy Pro account</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+          <form onSubmit={handleSubmit} className="bg-white/90 backdrop-blur-sm p-8 rounded-xl shadow-sm border border-green-100">
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
               <input
