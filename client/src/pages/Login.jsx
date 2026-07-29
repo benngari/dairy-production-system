@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 
-// TODO: replace with your actual Cloudinary image URL
 const FARM_IMAGE_URL = 'https://res.cloudinary.com/dd4b2ssdy/image/upload/v1785281237/agro1_d5fnzf.jpg';
+
+//  KALRO logo Cloudinary URL
+const LOGO_URL = 'https://res.cloudinary.com/dd4b2ssdy/image/upload/v1785325104/c3f881d8-9577-42c8-a9e3-6deaa4561b4b_fq4ouo.png';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -39,15 +41,12 @@ const Login = () => {
 
       {/* Right panel — dairy-themed background: warm cream fading into soft pasture green */}
       <div className="w-full lg:w-1/2 relative flex items-center justify-center bg-gradient-to-br from-amber-50 via-white to-green-50 px-6 py-12 overflow-hidden">
-        {/* Decorative soft blobs — evoke milk pooling / pasture, purely visual, no layout impact */}
         <div className="absolute -top-24 -right-24 w-72 h-72 bg-green-100 rounded-full blur-3xl opacity-60 pointer-events-none" />
         <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-amber-100 rounded-full blur-3xl opacity-60 pointer-events-none" />
 
         <div className="relative z-10 w-full max-w-sm">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white shadow-sm border border-green-100 mb-3">
-              <span className="text-2xl">🥛</span>
-            </div>
+            <img src={LOGO_URL} alt="KALRO" className="h-16 w-auto mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-gray-900">Welcome back</h2>
             <p className="text-sm text-gray-500 mt-1">Log in to your Dairy Pro account</p>
           </div>

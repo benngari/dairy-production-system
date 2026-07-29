@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 
 const ROLES = ['Manager', 'Production Operator', 'Store Keeper'];
 
-// TODO: replace with your actual Cloudinary image URL (same as Login.jsx)
+// Cloudinary image URL (same as Login.jsx)
 const FARM_IMAGE_URL = 'https://res.cloudinary.com/dd4b2ssdy/image/upload/v1785281237/agro1_d5fnzf.jpg';
 
 const Register = () => {
@@ -48,9 +48,7 @@ const Register = () => {
 
         <div className="relative z-10 w-full max-w-sm">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white shadow-sm border border-green-100 mb-3">
-              <span className="text-2xl">🥛</span>
-            </div>
+            <img src="https://res.cloudinary.com/dd4b2ssdy/image/upload/v1785325104/c3f881d8-9577-42c8-a9e3-6deaa4561b4b_fq4ouo.png" alt="KALRO" className="h-16 w-auto mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-gray-900">Create your account</h2>
             <p className="text-sm text-gray-500 mt-1">Join Dairy Pro to get started</p>
           </div>

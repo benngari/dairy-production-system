@@ -2,6 +2,9 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
+// TODO: replace with your actual KALRO logo Cloudinary URL (same as Login.jsx)
+const LOGO_URL = 'https://res.cloudinary.com/dd4b2ssdy/image/upload/v1785325104/c3f881d8-9577-42c8-a9e3-6deaa4561b4b_fq4ouo.png';
+
 const Sidebar = ({ isOpen, onClose }) => {
   const { user } = useAuth();
   const links = [
@@ -22,7 +25,6 @@ const Sidebar = ({ isOpen, onClose }) => {
 
   return (
     <>
-      {/* Backdrop — only shown on mobile when the drawer is open */}
       {isOpen && (
         <div
           className="fixed inset-0 bg-black/40 z-30 lg:hidden"
@@ -39,7 +41,10 @@ const Sidebar = ({ isOpen, onClose }) => {
         `}
       >
         <div className="p-4 flex items-center justify-between border-b">
-          <span className="text-xl font-bold text-green-700">Dairy System</span>
+          <div className="flex items-center space-x-2">
+            <img src={LOGO_URL} alt="KALRO" className="h-8 w-auto" />
+            <span className="text-lg font-bold text-green-700">Dairy System</span>
+          </div>
           <button onClick={onClose} className="lg:hidden text-gray-500 hover:text-gray-700 text-xl leading-none">
             ✕
           </button>
