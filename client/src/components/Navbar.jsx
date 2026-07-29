@@ -1,10 +1,12 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 import SearchBar from './SearchBar';
 
 const Navbar = ({ onMenuClick }) => {
   const { user, logout } = useAuth();
+  const { darkMode, toggleDarkMode } = useTheme();
   const navigate = useNavigate();
 
   return (
@@ -19,6 +21,13 @@ const Navbar = ({ onMenuClick }) => {
         </div>
       </div>
       <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
+        <button
+          onClick={toggleDarkMode}
+          className="text-lg hover:opacity-70 transition"
+          title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
+          {darkMode ? '☀️' : '🌙'}
+        </button>
         <span className="text-sm text-gray-700 hidden md:inline truncate max-w-[120px]">Welcome, {user?.name}</span>
         <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded hidden sm:inline">{user?.role}</span>
         <button
