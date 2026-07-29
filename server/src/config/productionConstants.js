@@ -1,5 +1,5 @@
 module.exports = {
-  LABOUR_PER_BATCH: 250,
+  LABOUR_PER_BATCH: 335,
   MILK_COST_PER_LITRE: 55,
   SUGAR_PERCENT_OF_MILK: 0.06,
   SUGAR_COST_PER_KG: 178,
@@ -11,9 +11,6 @@ module.exports = {
   CONSUMABLES_PERCENT: 0.05,
   FLAVOUR_ML_PER_15L: 5,
   COLOUR_ML_PER_15L: 15,
-  // Used to power the "Suggest Colours" helper in the UI and to validate
-  // flavour names. Colours themselves are now freely multi-selectable by
-  // the user, not strictly locked to this mapping.
   FLAVOUR_COLOUR_MAP: {
     'Mango': 'Annatto Colour',
     'Strawberry': 'Red Beet Colour',

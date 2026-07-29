@@ -9,6 +9,7 @@ const settingsSchema = new mongoose.Schema({
   unitSystem: { type: String, enum: ['metric', 'imperial'], default: 'metric' },
   theme: { type: String, enum: ['light', 'dark'], default: 'light' },
   labourCostPerHour: { type: Number, default: 20 },
+  labourCostPerBatch: { type: Number, default: 335 },
   consumablesMarkup: { type: Number, default: 5 },
   cultureCostPerSachet: { type: Number, default: 0 },
   sellingPrices: {

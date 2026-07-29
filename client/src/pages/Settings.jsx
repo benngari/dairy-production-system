@@ -80,6 +80,20 @@ const Settings = () => {
         </div>
 
         <div>
+          <label className="block text-sm font-medium">Labour Cost per Batch (KSh)</label>
+          <input
+            name="labourCostPerBatch"
+            type="number"
+            value={settings.labourCostPerBatch ?? ''}
+            onChange={handleChange}
+            className="border p-2 rounded w-full"
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Flat labour cost added to every Yoghurt/Mala batch, regardless of size.
+          </p>
+        </div>
+
+        <div>
           <h3 className="font-semibold mb-2">Yoghurt Selling Prices (KSh)</h3>
           <div className="grid grid-cols-5 gap-2">
             {YOGHURT_SIZES.map(size => (

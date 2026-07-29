@@ -41,7 +41,7 @@ async function computeBatchBreakdown({ productType, milkLitres, flavours = [], c
     throw new Error('Mala only uses Culture — flavours and colours are not applicable');
   }
 
-  const labour = LABOUR_PER_BATCH;
+  const labour = settings.labourCostPerBatch ?? LABOUR_PER_BATCH;
   const milkCost = milkLitres * MILK_COST_PER_LITRE;
 
   const sugarKg = milkLitres * SUGAR_PERCENT_OF_MILK;
