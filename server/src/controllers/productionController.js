@@ -407,7 +407,9 @@ exports.getProductionById = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-  // DELETE /api/production/:id — Administrator only.
+};
+
+// DELETE /api/production/:id — Administrator only.
 // Reverses the batch: restores ingredient stock and bottle stock that were
 // deducted when it was recorded, then removes the Production and its
 // ProductionHistory entry. Legacy recipe-based records are handled the
@@ -449,5 +451,4 @@ exports.deleteProduction = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-};
 };
