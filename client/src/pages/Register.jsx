@@ -5,7 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 const ROLES = ['Manager', 'Production Operator', 'Store Keeper'];
 
 // TODO: replace with your actual Cloudinary image URL (same as Login.jsx)
-const FARM_IMAGE_URL = 'https://res.cloudinary.com/YOUR_CLOUD_NAME/image/upload/v0000000000/your-image-name.jpg';
+const FARM_IMAGE_URL = 'https://res.cloudinary.com/dd4b2ssdy/image/upload/v1785281237/agro1_d5fnzf.jpg';
 
 const Register = () => {
   const [name, setName] = useState('');
