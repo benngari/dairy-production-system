@@ -3,19 +3,24 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import SearchBar from './SearchBar';
 
-const Navbar = () => {
+const Navbar = ({ onMenuClick }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   return (
-    <nav className="bg-white shadow px-4 py-3 flex items-center justify-between">
-      <div className="flex items-center space-x-4">
-        <h2 className="text-xl font-semibold text-green-700">Dairy Pro</h2>
-        <SearchBar />
+    <nav className="bg-white shadow px-3 sm:px-4 py-3 flex items-center justify-between gap-2">
+      <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
+        <button onClick={onMenuClick} className="lg:hidden text-gray-600 hover:text-gray-900 text-xl leading-none flex-shrink-0">
+          ☰
+        </button>
+        <h2 className="text-lg sm:text-xl font-semibold text-green-700 hidden sm:block flex-shrink-0">Dairy Pro</h2>
+        <div className="hidden md:block">
+          <SearchBar />
+        </div>
       </div>
-      <div className="flex items-center space-x-4">
-        <span className="text-sm text-gray-700">Welcome, {user?.name}</span>
-        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">{user?.role}</span>
+      <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
+        <span className="text-sm text-gray-700 hidden md:inline truncate max-w-[120px]">Welcome, {user?.name}</span>
+        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded hidden sm:inline">{user?.role}</span>
         <button
           onClick={() => { logout(); navigate('/login'); }}
           className="text-sm text-red-600 hover:text-red-800"
