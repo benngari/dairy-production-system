@@ -130,13 +130,7 @@ const Settings = () => {
           <p className="text-xs text-gray-500 mt-1">2L prices are left blank until the client confirms them.</p>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium">Theme</label>
-          <select name="theme" value={settings.theme || 'light'} onChange={handleChange} className="border p-2 rounded w-full">
-            <option value="light">Light</option>
-            <option value="dark">Dark</option>
-          </select>
-        </div>
+        
         <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded">Save Settings</button>
       </form>
     </div>
