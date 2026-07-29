@@ -9,6 +9,8 @@ const Users = () => {
   const { user: currentUser } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [resetTarget, setResetTarget] = useState(null);
+  const [newPassword, setNewPassword] = useState('');
 
   useEffect(() => {
     fetchUsers();
@@ -42,6 +44,18 @@ const Users = () => {
       fetchUsers();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Error updating status');
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await api.patch(`/users/${resetTarget._id}/password`, { newPassword });
+      toast.success(res.data.message || 'Password reset');
+      setResetTarget(null);
+      setNewPassword('');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Error resetting password');
     }
   };
 
@@ -82,13 +96,19 @@ const Users = () => {
                 </span>
               </td>
               <td className="text-sm text-gray-500">{new Date(u.createdAt).toLocaleDateString()}</td>
-              <td>
+              <td className="space-x-3">
                 <button
                   onClick={() => handleToggleActive(u._id, u.isActive !== false)}
                   disabled={u._id === currentUser?.id}
                   className={`text-sm ${u.isActive !== false ? 'text-red-600' : 'text-green-600'} disabled:text-gray-300`}
                 >
                   {u.isActive !== false ? 'Deactivate' : 'Activate'}
+                </button>
+                <button
+                  onClick={() => { setResetTarget(u); setNewPassword(''); }}
+                  className="text-sm text-blue-600 hover:underline"
+                >
+                  Reset Password
                 </button>
               </td>
             </tr>
@@ -98,6 +118,40 @@ const Users = () => {
       <p className="text-xs text-gray-500 mt-2">
         You can't change your own role or deactivate your own account — ask another Administrator if you need that changed.
       </p>
+
+      {resetTarget && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm">
+            <h3 className="font-bold text-lg mb-1">Reset Password</h3>
+            <p className="text-sm text-gray-500 mb-4">For {resetTarget.name} ({resetTarget.email})</p>
+            <form onSubmit={handleResetPassword}>
+              <input
+                type="text"
+                placeholder="New password (min 6 characters)"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full p-2 border rounded mb-4"
+                minLength={6}
+                required
+                autoFocus
+              />
+              <div className="flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => { setResetTarget(null); setNewPassword(''); }}
+                  className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded"
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="px-4 py-2 text-sm bg-green-600 text-white rounded hover:bg-green-700">
+                  Set Password
+                </button>
+              </div>
+            </form>
+            <p className="text-xs text-gray-400 mt-3">Share this password with the user directly — it won't be shown again here.</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

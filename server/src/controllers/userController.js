@@ -43,4 +43,23 @@ exports.updateUserStatus = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
+  
+};
+// PATCH /api/users/:id/password — Administrator only.
+// Lets an admin set a new password for a locked-out user. No email service
+// required — the admin shares the new password with the user directly.
+exports.resetUserPassword = async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters' });
+    }
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    user.password = newPassword; // pre-save hook on the User model hashes this automatically
+    await user.save();
+    res.json({ message: `Password reset for ${user.email}` });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
