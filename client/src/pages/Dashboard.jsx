@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/client';
 import ProductionChart from '../components/charts/ProductionChart';
+import Spinner from '../components/Spinner';
+import EmptyState from '../components/EmptyState';
 
 const Dashboard = () => {
   const [data, setData] = useState({
@@ -13,18 +15,9 @@ const Dashboard = () => {
     const fetchData = async () => {
       try {
         const res = await api.get('/dashboard');
-        setData({
-          today: res.data.today || {},
-          lowStock: res.data.lowStock || [],
-          lowStockPackaging: res.data.lowStockPackaging || [],
-          recentBatches: res.data.recentBatches || [],
-          weeklyData: res.data.weeklyData || [],
-          overallTotals: res.data.overallTotals || {},
-          bottleInventory: res.data.bottleInventory || [],
-          totalBottlesProduced: res.data.totalBottlesProduced || 0
-        });
+        setData(res.data);
       } catch (err) {
-        console.error('Dashboard fetch failed:', err);
+        console.error(err);
       } finally {
         setLoading(false);
       }
@@ -32,80 +25,74 @@ const Dashboard = () => {
     fetchData();
   }, []);
 
-  if (loading) return <div>Loading dashboard...</div>;
+  if (loading) return <Spinner label="Loading dashboard..." />;
 
   const totals = data.overallTotals || {};
 
+  const StatCard = ({ icon, label, value, iconBg }) => (
+    <div className="stat-card">
+      <div>
+        <p className="text-xs font-medium text-stone-400 uppercase tracking-wide">{label}</p>
+        <p className="text-xl font-bold text-stone-900 mt-1">{value}</p>
+      </div>
+      <div className={`stat-icon ${iconBg || ''}`}>{icon}</div>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Dashboard</h1>
+      <h1 className="page-title">Dashboard</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white p-4 rounded shadow">
-          <h3 className="text-gray-500 text-sm">Today's Productions</h3>
-          <p className="text-2xl font-bold">{data.today.productions || 0}</p>
-        </div>
-        <div className="bg-white p-4 rounded shadow">
-          <h3 className="text-gray-500 text-sm">Milk Used Today (L)</h3>
-          <p className="text-2xl font-bold">{data.today.milkUsed?.toFixed(2) || 0}</p>
-        </div>
-        <div className="bg-white p-4 rounded shadow">
-          <h3 className="text-gray-500 text-sm">Output Today</h3>
-          <p className="text-2xl font-bold">{data.today.output?.toFixed(2) || 0}</p>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <StatCard icon="📋" label="Today's Productions" value={data.today.productions || 0} />
+        <StatCard icon="🥛" label="Milk Used Today" value={`${(data.today.milkUsed || 0).toFixed(2)} L`} />
+        <StatCard icon="📦" label="Output Today" value={`${(data.today.output || 0).toFixed(2)}`} />
       </div>
 
       <div>
-        <h2 className="text-lg font-semibold mb-2">Yoghurt & Mala Totals (All Time)</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white p-4 rounded shadow">
-            <h3 className="text-gray-500 text-sm">Total Milk Processed</h3>
-            <p className="text-xl font-bold">{(totals.totalMilkProcessed || 0).toFixed(2)} L</p>
-          </div>
-          <div className="bg-white p-4 rounded shadow">
-            <h3 className="text-gray-500 text-sm">Production Cost</h3>
-            <p className="text-xl font-bold">KSh {(totals.totalProductionCost || 0).toFixed(2)}</p>
-          </div>
-          <div className="bg-white p-4 rounded shadow">
-            <h3 className="text-gray-500 text-sm">Revenue</h3>
-            <p className="text-xl font-bold">KSh {(totals.totalRevenue || 0).toFixed(2)}</p>
-          </div>
-          <div className="bg-white p-4 rounded shadow">
-            <h3 className="text-gray-500 text-sm">Expected Profit</h3>
-            <p className={`text-xl font-bold ${(totals.totalProfit || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              KSh {(totals.totalProfit || 0).toFixed(2)}
-            </p>
-          </div>
-          <div className="bg-white p-4 rounded shadow">
-            <h3 className="text-gray-500 text-sm">Bottles Produced</h3>
-            <p className="text-xl font-bold">{data.totalBottlesProduced || 0}</p>
-          </div>
-          <div className="bg-white p-4 rounded shadow">
-            <h3 className="text-gray-500 text-sm">Remaining Product</h3>
-            <p className="text-xl font-bold">{(totals.totalRemainingProduct || 0).toFixed(2)} L</p>
-          </div>
+        <h2 className="text-sm font-semibold text-stone-500 uppercase tracking-wide mb-3">Yoghurt & Mala Totals (All Time)</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <StatCard icon="🥛" label="Milk Processed" value={`${(totals.totalMilkProcessed || 0).toFixed(0)} L`} />
+          <StatCard icon="💵" label="Production Cost" value={`KSh ${(totals.totalProductionCost || 0).toFixed(0)}`} />
+          <StatCard icon="💰" label="Revenue" value={`KSh ${(totals.totalRevenue || 0).toFixed(0)}`} />
+          <StatCard
+            icon={totals.totalProfit >= 0 ? '📈' : '📉'}
+            iconBg={totals.totalProfit >= 0 ? 'bg-green-50' : 'bg-red-50'}
+            label="Expected Profit"
+            value={
+              <span className={totals.totalProfit >= 0 ? 'text-green-700' : 'text-red-600'}>
+                KSh {(totals.totalProfit || 0).toFixed(0)}
+              </span>
+            }
+          />
+          <StatCard icon="🍾" label="Bottles Produced" value={data.totalBottlesProduced || 0} />
+          <StatCard icon="🧴" label="Remaining Product" value={`${(totals.totalRemainingProduct || 0).toFixed(2)} L`} />
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white p-4 rounded shadow">
-          <h3 className="font-semibold mb-2">Weekly Production</h3>
+        <div className="app-card">
+          <h3 className="font-semibold text-stone-800 mb-3">Weekly Production</h3>
           <ProductionChart data={data.weeklyData} />
         </div>
-        <div className="bg-white p-4 rounded shadow">
-          <h3 className="font-semibold mb-2">Low Stock Alerts</h3>
-          {(data.lowStock || []).length === 0 && (data.lowStockPackaging || []).length === 0 ? (
-            <p className="text-green-600">All stock levels are adequate.</p>
+        <div className="app-card">
+          <h3 className="font-semibold text-stone-800 mb-3">Low Stock Alerts</h3>
+          {data.lowStock.length === 0 && data.lowStockPackaging.length === 0 ? (
+            <div className="flex items-center gap-2 text-green-700 text-sm py-4">
+              <span className="text-lg">✅</span> All stock levels are adequate.
+            </div>
           ) : (
-            <ul className="space-y-1">
-              {(data.lowStock || []).map(item => (
-                <li key={item._id} className="text-red-600">
-                  {item.name}: {item.stock} {item.unit} (min: {item.minStock})
+            <ul className="space-y-2">
+              {data.lowStock.map(item => (
+                <li key={item._id} className="flex justify-between text-sm bg-red-50 text-red-700 px-3 py-2 rounded-lg">
+                  <span>{item.name}</span>
+                  <span className="font-medium">{item.stock} {item.unit} (min: {item.minStock})</span>
                 </li>
               ))}
-              {(data.lowStockPackaging || []).map(item => (
-                <li key={item._id} className="text-red-600">
-                  {item.size} bottles: {item.stock} (min: {item.minStock})
+              {data.lowStockPackaging.map(item => (
+                <li key={item._id} className="flex justify-between text-sm bg-red-50 text-red-700 px-3 py-2 rounded-lg">
+                  <span>{item.size} bottles</span>
+                  <span className="font-medium">{item.stock} (min: {item.minStock})</span>
                 </li>
               ))}
             </ul>
@@ -113,54 +100,68 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="bg-white p-4 rounded shadow">
-        <h3 className="font-semibold mb-2">Bottle Inventory</h3>
-        <table className="min-w-full text-sm">
-          <thead>
-            <tr className="border-b">
-              <th className="text-left py-2">Size</th>
-              <th className="text-left">Opening Stock</th>
-              <th className="text-left">Current Stock</th>
-              <th className="text-left">Min Stock</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(data.bottleInventory || []).map(item => (
-              <tr key={item._id} className="border-b">
-                <td className="py-1">{item.size}</td>
-                <td>{item.openingStock ?? '-'}</td>
-                <td className={item.stock < item.minStock ? 'text-red-600' : ''}>{item.stock}</td>
-                <td>{item.minStock}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="app-card">
+        <h3 className="font-semibold text-stone-800 mb-3">Bottle Inventory</h3>
+        {(data.bottleInventory || []).length === 0 ? (
+          <EmptyState icon="🍾" title="No bottle stock recorded" subtitle="Add packaging sizes in the Packaging page to see them here." />
+        ) : (
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Size</th>
+                  <th>Opening Stock</th>
+                  <th>Current Stock</th>
+                  <th>Min Stock</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(data.bottleInventory || []).map(item => (
+                  <tr key={item._id}>
+                    <td className="font-medium">{item.size}</td>
+                    <td>{item.openingStock ?? '-'}</td>
+                    <td className={item.stock < item.minStock ? 'text-red-600 font-medium' : ''}>{item.stock}</td>
+                    <td>{item.minStock}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
-      <div className="bg-white p-4 rounded shadow">
-        <h3 className="font-semibold mb-2">Recent Batches</h3>
-        <table className="min-w-full text-sm">
-          <thead>
-            <tr className="border-b">
-              <th className="text-left py-2">Date</th>
-              <th className="text-left">Product</th>
-              <th className="text-left">Milk (L)</th>
-              <th className="text-left">Output</th>
-              <th className="text-left">Profit</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(data.recentBatches || []).map((batch, idx) => (
-              <tr key={idx} className="border-b">
-                <td className="py-1">{new Date(batch.date).toLocaleDateString()}</td>
-                <td>{batch.recipeName}</td>
-                <td>{batch.milkUsed}</td>
-                <td>{batch.output}</td>
-                <td>{batch.profit != null ? `KSh ${batch.profit.toFixed(2)}` : '-'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="app-card">
+        <h3 className="font-semibold text-stone-800 mb-3">Recent Batches</h3>
+        {data.recentBatches.length === 0 ? (
+          <EmptyState icon="🧮" title="No batches recorded yet" subtitle="Record your first batch in Production Calculator to see it here." />
+        ) : (
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Product</th>
+                  <th>Milk (L)</th>
+                  <th>Output</th>
+                  <th>Profit</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.recentBatches.map((batch, idx) => (
+                  <tr key={idx}>
+                    <td>{new Date(batch.date).toLocaleDateString()}</td>
+                    <td className="font-medium">{batch.recipeName}</td>
+                    <td>{batch.milkUsed}</td>
+                    <td>{batch.output}</td>
+                    <td className={batch.profit >= 0 ? 'text-green-700' : 'text-red-600'}>
+                      {batch.profit != null ? `KSh ${batch.profit.toFixed(2)}` : '-'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
