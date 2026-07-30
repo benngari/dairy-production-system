@@ -57,10 +57,10 @@ const Sidebar = ({ isOpen, onClose }) => {
               to={link.to}
               onClick={onClose}
               className={({ isActive }) =>
-                `flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm transition border-l-[3px] ${
+                `flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm transition ${
                   isActive
-                    ? 'bg-green-50 text-green-800 font-medium border-green-600'
-                    : 'text-stone-600 hover:bg-stone-50 border-transparent'
+                    ? 'bg-green-50 text-green-800 font-medium'
+                    : 'text-stone-600 hover:bg-stone-50'
                 }`
               }
             >
