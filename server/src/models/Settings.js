@@ -21,6 +21,7 @@ const settingsSchema = new mongoose.Schema({
       '5L': { type: Number, default: 700 }
     },
     mala: {
+      '500ml': { type: Number, default: null },
       '1L': { type: Number, default: 130 },
       '2L': { type: Number, default: null },
       '3L': { type: Number, default: 350 },

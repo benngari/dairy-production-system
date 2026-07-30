@@ -14,6 +14,8 @@ const Reports = () => {
 
   const [ingredientUsage, setIngredientUsage] = useState([]);
   const [consumption, setConsumption] = useState({ ingredients: [], packaging: [] });
+  const [dailyStockHistory, setDailyStockHistory] = useState([]);
+  const [dailyStockSummary, setDailyStockSummary] = useState([]);
 
   const { user } = useAuth();
 
@@ -25,6 +27,7 @@ const Reports = () => {
     if (tab === 'summary') fetchSummary();
     if (tab === 'ingredients') fetchIngredientUsage();
     if (tab === 'consumption') fetchConsumption();
+    if (tab === 'daily-stock') fetchDailyStockData();
   }, [tab, period]);
 
   const fetchHistory = async () => {
@@ -81,6 +84,23 @@ const Reports = () => {
     }
   };
 
+  const fetchDailyStockData = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
+      const [historyRes, summaryRes] = await Promise.all([
+        api.get(`/daily-stock/history?${params}`),
+        api.get(`/daily-stock/summary?${params}`)
+      ]);
+      setDailyStockHistory(historyRes.data || []);
+      setDailyStockSummary(summaryRes.data || []);
+    } catch (err) {
+      setDailyStockHistory([]);
+      setDailyStockSummary([]);
+    }
+  };
+
   const handleExportPDF = async () => {
     try {
       const res = await api.get('/reports/export/pdf', { responseType: 'blob' });
@@ -117,7 +137,8 @@ const Reports = () => {
     { id: 'history', label: 'Production History' },
     { id: 'summary', label: 'Daily/Weekly/Monthly' },
     { id: 'ingredients', label: 'Ingredient Usage' },
-    { id: 'consumption', label: 'Inventory Consumption' }
+    { id: 'consumption', label: 'Inventory Consumption' },
+    { id: 'daily-stock', label: 'Daily Stock & Sales' }
   ];
 
   return (
@@ -277,6 +298,76 @@ const Reports = () => {
                 <li key={idx}>{p.size}: {p.totalUsed} bottles</li>
               ))}
             </ul>
+          </div>
+        </div>
+      )}
+
+    {tab === 'daily-stock' && (
+        <div className="space-y-4">
+          <div className="bg-white p-4 rounded shadow flex space-x-4 items-end">
+            <div>
+              <label className="block text-sm">Start Date</label>
+              <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="border p-2 rounded" />
+            </div>
+            <div>
+              <label className="block text-sm">End Date</label>
+              <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="border p-2 rounded" />
+            </div>
+            <button onClick={fetchDailyStockData} className="bg-blue-600 text-white px-4 py-2 rounded">Filter</button>
+          </div>
+
+          <div className="bg-white p-4 rounded shadow">
+            <h3 className="font-semibold mb-2">Daily Totals</h3>
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-2">Date</th>
+                  <th>Bottles Sold</th>
+                  <th>Revenue</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(dailyStockSummary || []).map((row, idx) => (
+                  <tr key={idx} className="border-b">
+                    <td className="py-1">{row._id}</td>
+                    <td className="text-center">{row.totalSold}</td>
+                    <td className="text-center">KSh {(row.totalRevenue || 0).toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="bg-white p-4 rounded shadow">
+            <h3 className="font-semibold mb-2">Detail by Product & Size</h3>
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-2">Date</th>
+                  <th>Product</th>
+                  <th>Size</th>
+                  <th>Opening</th>
+                  <th>Added</th>
+                  <th>Closing</th>
+                  <th>Sold</th>
+                  <th>Revenue</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(dailyStockHistory || []).map((row) => (
+                  <tr key={row._id} className="border-b">
+                    <td className="py-1">{new Date(row.date).toLocaleDateString()}</td>
+                    <td>{row.productType}</td>
+                    <td>{row.size}</td>
+                    <td className="text-center">{row.openingStock}</td>
+                    <td className="text-center">{row.addedStock}</td>
+                    <td className="text-center">{row.closingStock}</td>
+                    <td className="text-center">{row.soldQuantity}</td>
+                    <td className="text-center">KSh {(row.revenue || 0).toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}

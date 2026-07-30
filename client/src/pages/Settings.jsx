@@ -3,7 +3,7 @@ import api from '../api/client';
 import toast from 'react-hot-toast';
 
 const YOGHURT_SIZES = ['500ml', '1L', '2L', '3L', '5L'];
-const MALA_SIZES = ['1L', '2L', '3L', '5L'];
+const MALA_SIZES = ['500ml', '1L', '2L', '3L', '5L'];
 
 const Settings = () => {
   const [settings, setSettings] = useState({

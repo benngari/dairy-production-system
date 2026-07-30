@@ -14,6 +14,7 @@ const dashboardRoutes = require('./src/routes/dashboard');
 const settingsRoutes = require('./src/routes/settings');
 const userRoutes = require('./src/routes/users');
 const auditLogRoutes = require('./src/routes/auditLog');
+const dailyStockRoutes = require('./src/routes/dailyStock');
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/audit-log', auditLogRoutes);
+app.use('/api/daily-stock', dailyStockRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
