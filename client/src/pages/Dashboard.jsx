@@ -29,13 +29,10 @@ const Dashboard = () => {
 
   const totals = data.overallTotals || {};
 
-  const StatCard = ({ icon, label, value, iconBg }) => (
-    <div className="stat-card">
-      <div>
-        <p className="text-xs font-medium text-stone-400 uppercase tracking-wide">{label}</p>
-        <p className="text-xl font-bold text-stone-900 mt-1">{value}</p>
-      </div>
-      <div className={`stat-icon ${iconBg || ''}`}>{icon}</div>
+  const StatCard = ({ label, value }) => (
+    <div className="app-card">
+      <p className="text-xs font-medium text-stone-400 uppercase tracking-wide">{label}</p>
+      <p className="text-xl font-bold text-stone-900 mt-1">{value}</p>
     </div>
   );
 
@@ -44,20 +41,18 @@ const Dashboard = () => {
       <h1 className="page-title">Dashboard</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard icon="📋" label="Today's Productions" value={data.today.productions || 0} />
-        <StatCard icon="🥛" label="Milk Used Today" value={`${(data.today.milkUsed || 0).toFixed(2)} L`} />
-        <StatCard icon="📦" label="Output Today" value={`${(data.today.output || 0).toFixed(2)}`} />
+        <StatCard label="Today's Productions" value={data.today.productions || 0} />
+        <StatCard label="Milk Used Today" value={`${(data.today.milkUsed || 0).toFixed(2)} L`} />
+        <StatCard label="Output Today" value={`${(data.today.output || 0).toFixed(2)}`} />
       </div>
 
       <div>
         <h2 className="text-sm font-semibold text-stone-500 uppercase tracking-wide mb-3">Yoghurt & Mala Totals (All Time)</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          <StatCard icon="🥛" label="Milk Processed" value={`${(totals.totalMilkProcessed || 0).toFixed(0)} L`} />
-          <StatCard icon="💵" label="Production Cost" value={`KSh ${(totals.totalProductionCost || 0).toFixed(0)}`} />
-          <StatCard icon="💰" label="Revenue" value={`KSh ${(totals.totalRevenue || 0).toFixed(0)}`} />
+          <StatCard label="Milk Processed" value={`${(totals.totalMilkProcessed || 0).toFixed(0)} L`} />
+          <StatCard label="Production Cost" value={`KSh ${(totals.totalProductionCost || 0).toFixed(0)}`} />
+          <StatCard label="Revenue" value={`KSh ${(totals.totalRevenue || 0).toFixed(0)}`} />
           <StatCard
-            icon={totals.totalProfit >= 0 ? '📈' : '📉'}
-            iconBg={totals.totalProfit >= 0 ? 'bg-green-50' : 'bg-red-50'}
             label="Expected Profit"
             value={
               <span className={totals.totalProfit >= 0 ? 'text-green-700' : 'text-red-600'}>
@@ -65,8 +60,8 @@ const Dashboard = () => {
               </span>
             }
           />
-          <StatCard icon="🍾" label="Bottles Produced" value={data.totalBottlesProduced || 0} />
-          <StatCard icon="🧴" label="Remaining Product" value={`${(totals.totalRemainingProduct || 0).toFixed(2)} L`} />
+          <StatCard label="Bottles Produced" value={data.totalBottlesProduced || 0} />
+          <StatCard label="Remaining Product" value={`${(totals.totalRemainingProduct || 0).toFixed(2)} L`} />
         </div>
       </div>
 
