@@ -9,12 +9,17 @@ const {
   updateRecipe,
   deleteRecipe,
   duplicateRecipe,
-  toggleRecipeStatus
+  toggleRecipeStatus,
+  getDeletedRecipes,
+  restoreRecipe,
+  permanentlyDeleteRecipe
 } = require('../controllers/recipeController');
 
 router.route('/')
   .post(protect, authorize('Administrator', 'Manager'), createRecipe)
   .get(protect, getRecipes);
+
+router.get('/trash', protect, authorize('Administrator'), getDeletedRecipes);
 
 router.route('/:id')
   .get(protect, getRecipeById)
@@ -23,5 +28,7 @@ router.route('/:id')
 
 router.post('/:id/duplicate', protect, authorize('Administrator', 'Manager'), duplicateRecipe);
 router.patch('/:id/toggle', protect, authorize('Administrator', 'Manager'), toggleRecipeStatus);
+router.patch('/:id/restore', protect, authorize('Administrator'), restoreRecipe);
+router.delete('/:id/permanent', protect, authorize('Administrator'), permanentlyDeleteRecipe);
 
 module.exports = router;

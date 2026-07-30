@@ -11,6 +11,9 @@ const recipeSchema = new mongoose.Schema({
   version: { type: Number, default: 1 },
   parentVersion: { type: mongoose.Schema.Types.ObjectId, ref: 'Recipe' },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  isDeleted: { type: Boolean, default: false },
+  deletedAt: Date,
+  deletedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });

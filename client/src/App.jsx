@@ -16,9 +16,12 @@ import ProfitCalculator from './pages/ProfitCalculator';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import Users from './pages/Users';
+import AuditLog from './pages/AuditLog';
+import Trash from './pages/Trash';
 
 function AppRoutes() {
   const { user } = useAuth();
+  const isAdmin = user?.role === 'Administrator';
   return (
     <Routes>
       <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
@@ -36,7 +39,9 @@ function AppRoutes() {
         <Route path="profit" element={<ProfitCalculator />} />
         <Route path="reports" element={<Reports />} />
         <Route path="settings" element={<Settings />} />
-        <Route path="users" element={user?.role === 'Administrator' ? <Users /> : <Navigate to="/" />} />
+        <Route path="users" element={isAdmin ? <Users /> : <Navigate to="/" />} />
+        <Route path="audit-log" element={isAdmin ? <AuditLog /> : <Navigate to="/" />} />
+        <Route path="trash" element={isAdmin ? <Trash /> : <Navigate to="/" />} />
       </Route>
     </Routes>
   );

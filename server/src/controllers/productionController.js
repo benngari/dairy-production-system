@@ -1,3 +1,4 @@
+const { logAction } = require('../utils/auditLog');
 const Production = require('../models/Production');
 const Recipe = require('../models/Recipe');
 const Ingredient = require('../models/Ingredient');
@@ -330,6 +331,7 @@ exports.createProduction = async (req, res) => {
       });
 
       return res.status(201).json(production);
+      await logAction(req, { action: 'create', entityType: 'Production', entityId: production._id, entityLabel: `${productType} batch - ${milkLitres}L`, details: `Cost: KSh ${breakdown.totalBudgetCost.toFixed(2)}` });
     }
 
     // --- Legacy recipe-based production creation (unchanged) ---
@@ -446,6 +448,7 @@ exports.deleteProduction = async (req, res) => {
 
     await ProductionHistory.deleteOne({ productionId: production._id });
     await Production.findByIdAndDelete(req.params.id);
+    await logAction(req, { action: 'delete', entityType: 'Production', entityId: production._id, entityLabel: `${production.productType || 'Production'} batch - ${(production.milkLitres || production.milkQuantity || 0)}L` });
 
     res.json({ message: 'Production batch deleted and stock restored' });
   } catch (error) {

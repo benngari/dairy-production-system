@@ -13,6 +13,9 @@ const packagingSchema = new mongoose.Schema({
     date: { type: Date, default: Date.now },
     note: String
   }],
+  isDeleted: { type: Boolean, default: false },
+  deletedAt: Date,
+  deletedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   createdAt: { type: Date, default: Date.now }
 });
 

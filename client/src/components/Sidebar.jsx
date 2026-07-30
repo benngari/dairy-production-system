@@ -2,7 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-// TODO: replace with your actual KALRO logo Cloudinary URL (same as Login.jsx)
+// KALRO logo Cloudinary URL (same as Login.jsx)
 const LOGO_URL = 'https://res.cloudinary.com/dd4b2ssdy/image/upload/v1785325104/c3f881d8-9577-42c8-a9e3-6deaa4561b4b_fq4ouo.png';
 
 const Sidebar = ({ isOpen, onClose }) => {
@@ -21,6 +21,8 @@ const Sidebar = ({ isOpen, onClose }) => {
   }
   if (user?.role === 'Administrator') {
     links.push({ to: '/users', label: 'User Management', icon: '👥' });
+    links.push({ to: '/audit-log', label: 'Audit Log', icon: '📜' });
+    links.push({ to: '/trash', label: 'Trash', icon: '🗑️' });
   }
 
   return (
