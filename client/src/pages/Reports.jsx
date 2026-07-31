@@ -36,7 +36,7 @@ const Reports = () => {
       if (startDate) params.append('startDate', startDate);
       if (endDate) params.append('endDate', endDate);
       const res = await api.get(`/reports/production-history?${params}`);
-      setHistory(res.data || []); // guard against missing/malformed response
+      setHistory(res.data || []);
     } catch (err) {
       setHistory([]);
     }
@@ -57,7 +57,7 @@ const Reports = () => {
     }
   };
 
-const handleDeleteDailyStock = async (item) => {
+  const handleDeleteDailyStock = async (item) => {
     if (!window.confirm(`Move ${item.productType} ${item.size} (${new Date(item.date).toLocaleDateString()}) to trash?`)) return;
     try {
       await api.delete(`/daily-stock/${item._id}`);
@@ -71,7 +71,7 @@ const handleDeleteDailyStock = async (item) => {
   const fetchSummary = async () => {
     try {
       const res = await api.get(`/reports/summary?period=${period}`);
-      setSummary(res.data || []); // guard against missing/malformed response
+      setSummary(res.data || []);
     } catch (err) {
       setSummary([]);
     }
@@ -80,7 +80,7 @@ const handleDeleteDailyStock = async (item) => {
   const fetchIngredientUsage = async () => {
     try {
       const res = await api.get('/reports/ingredient-usage');
-      setIngredientUsage(res.data || []); // guard against missing/malformed response
+      setIngredientUsage(res.data || []);
     } catch (err) {
       setIngredientUsage([]);
     }
@@ -89,7 +89,7 @@ const handleDeleteDailyStock = async (item) => {
   const fetchConsumption = async () => {
     try {
       const res = await api.get('/reports/inventory-consumption');
-      setConsumption(res.data || { ingredients: [], packaging: [] }); // guard against missing/malformed response
+      setConsumption(res.data || { ingredients: [], packaging: [] });
     } catch (err) {
       setConsumption({ ingredients: [], packaging: [] });
     }
@@ -112,13 +112,25 @@ const handleDeleteDailyStock = async (item) => {
     }
   };
 
+  // Generic export — builds the query string from whichever filters are
+  // relevant to the currently active tab, so every report type can export.
+  const buildExportParams = () => {
+    const params = new URLSearchParams();
+    params.append('type', tab === 'history' ? 'production-history' : tab === 'summary' ? 'summary' : tab === 'ingredients' ? 'ingredient-usage' : tab === 'consumption' ? 'inventory-consumption' : 'daily-stock');
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    if (tab === 'summary') params.append('period', period);
+    return params;
+  };
+
   const handleExportPDF = async () => {
     try {
-      const res = await api.get('/reports/export/pdf', { responseType: 'blob' });
+      const params = buildExportParams();
+      const res = await api.get(`/reports/export/pdf?${params}`, { responseType: 'blob' });
       const url = window.URL.createObjectURL(new Blob([res.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', 'production_report.pdf');
+      link.setAttribute('download', `${params.get('type')}_report.pdf`);
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -130,11 +142,12 @@ const handleDeleteDailyStock = async (item) => {
 
   const handleExportExcel = async () => {
     try {
-      const res = await api.get('/reports/export/excel', { responseType: 'blob' });
+      const params = buildExportParams();
+      const res = await api.get(`/reports/export/excel?${params}`, { responseType: 'blob' });
       const url = window.URL.createObjectURL(new Blob([res.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', 'production_report.xlsx');
+      link.setAttribute('download', `${params.get('type')}_report.xlsx`);
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -143,6 +156,13 @@ const handleDeleteDailyStock = async (item) => {
       toast.error(err.response?.data?.message || 'Error exporting Excel');
     }
   };
+
+  const ExportButtons = () => (
+    <div className="flex space-x-2">
+      <button onClick={handleExportPDF} className="bg-red-600 text-white px-4 py-2 rounded">Export PDF</button>
+      <button onClick={handleExportExcel} className="bg-green-600 text-white px-4 py-2 rounded">Export Excel</button>
+    </div>
+  );
 
   const tabs = [
     { id: 'history', label: 'Production History' },
@@ -170,7 +190,7 @@ const handleDeleteDailyStock = async (item) => {
 
       {tab === 'history' && (
         <>
-          <div className="bg-white p-4 rounded shadow mb-4 flex space-x-4 items-end">
+          <div className="bg-white p-4 rounded shadow mb-4 flex flex-wrap gap-4 items-end">
             <div>
               <label className="block text-sm">Start Date</label>
               <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="border p-2 rounded" />
@@ -180,8 +200,7 @@ const handleDeleteDailyStock = async (item) => {
               <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="border p-2 rounded" />
             </div>
             <button onClick={fetchHistory} className="bg-blue-600 text-white px-4 py-2 rounded">Filter</button>
-            <button onClick={handleExportPDF} className="bg-red-600 text-white px-4 py-2 rounded">Export PDF</button>
-            <button onClick={handleExportExcel} className="bg-green-600 text-white px-4 py-2 rounded">Export Excel</button>
+            <ExportButtons />
           </div>
 
           <table className="min-w-full bg-white shadow rounded">
@@ -231,16 +250,19 @@ const handleDeleteDailyStock = async (item) => {
 
       {tab === 'summary' && (
         <>
-          <div className="mb-4 flex space-x-2">
-            {['daily', 'weekly', 'monthly'].map(p => (
-              <button
-                key={p}
-                onClick={() => setPeriod(p)}
-                className={`px-3 py-1 rounded text-sm capitalize ${period === p ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
-              >
-                {p}
-              </button>
-            ))}
+          <div className="mb-4 flex flex-wrap gap-2 items-center justify-between">
+            <div className="flex space-x-2">
+              {['daily', 'weekly', 'monthly'].map(p => (
+                <button
+                  key={p}
+                  onClick={() => setPeriod(p)}
+                  className={`px-3 py-1 rounded text-sm capitalize ${period === p ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+            <ExportButtons />
           </div>
           <table className="min-w-full bg-white shadow rounded">
             <thead>
@@ -272,50 +294,60 @@ const handleDeleteDailyStock = async (item) => {
       )}
 
       {tab === 'ingredients' && (
-        <table className="min-w-full bg-white shadow rounded">
-          <thead>
-            <tr className="border-b">
-              <th className="p-2 text-left">Ingredient</th>
-              <th>Total Used</th>
-              <th>Unit</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(ingredientUsage || []).map((row, idx) => (
-              <tr key={idx} className="border-b">
-                <td className="p-2">{row._id}</td>
-                <td>{row.totalQuantity?.toFixed(2)}</td>
-                <td>{row.unit}</td>
+        <>
+          <div className="mb-4 flex justify-end">
+            <ExportButtons />
+          </div>
+          <table className="min-w-full bg-white shadow rounded">
+            <thead>
+              <tr className="border-b">
+                <th className="p-2 text-left">Ingredient</th>
+                <th>Total Used</th>
+                <th>Unit</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {(ingredientUsage || []).map((row, idx) => (
+                <tr key={idx} className="border-b">
+                  <td className="p-2">{row._id}</td>
+                  <td>{row.totalQuantity?.toFixed(2)}</td>
+                  <td>{row.unit}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
       )}
 
       {tab === 'consumption' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-white p-4 rounded shadow">
-            <h3 className="font-semibold mb-2">Ingredients Consumed</h3>
-            <ul className="text-sm space-y-1">
-              {(consumption.ingredients || []).map((i, idx) => (
-                <li key={idx}>{i.name}: {i.totalUsed.toFixed(2)} {i.unit}</li>
-              ))}
-            </ul>
+        <>
+          <div className="mb-4 flex justify-end">
+            <ExportButtons />
           </div>
-          <div className="bg-white p-4 rounded shadow">
-            <h3 className="font-semibold mb-2">Bottles Consumed</h3>
-            <ul className="text-sm space-y-1">
-              {(consumption.packaging || []).map((p, idx) => (
-                <li key={idx}>{p.size}: {p.totalUsed} bottles</li>
-              ))}
-            </ul>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-white p-4 rounded shadow">
+              <h3 className="font-semibold mb-2">Ingredients Consumed</h3>
+              <ul className="text-sm space-y-1">
+                {(consumption.ingredients || []).map((i, idx) => (
+                  <li key={idx}>{i.name}: {i.totalUsed.toFixed(2)} {i.unit}</li>
+                ))}
+              </ul>
+            </div>
+            <div className="bg-white p-4 rounded shadow">
+              <h3 className="font-semibold mb-2">Bottles Consumed</h3>
+              <ul className="text-sm space-y-1">
+                {(consumption.packaging || []).map((p, idx) => (
+                  <li key={idx}>{p.size}: {p.totalUsed} bottles</li>
+                ))}
+              </ul>
+            </div>
           </div>
-        </div>
+        </>
       )}
 
-    {tab === 'daily-stock' && (
+      {tab === 'daily-stock' && (
         <div className="space-y-4">
-          <div className="bg-white p-4 rounded shadow flex space-x-4 items-end">
+          <div className="bg-white p-4 rounded shadow flex flex-wrap gap-4 items-end">
             <div>
               <label className="block text-sm">Start Date</label>
               <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="border p-2 rounded" />
@@ -325,6 +357,7 @@ const handleDeleteDailyStock = async (item) => {
               <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="border p-2 rounded" />
             </div>
             <button onClick={fetchDailyStockData} className="bg-blue-600 text-white px-4 py-2 rounded">Filter</button>
+            <ExportButtons />
           </div>
 
           <div className="bg-white p-4 rounded shadow">
