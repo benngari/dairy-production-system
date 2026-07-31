@@ -87,7 +87,7 @@ const Users = () => {
       </div>
       <p className="text-xs text-gray-400 mb-4 flex items-center gap-1">
         <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-600 text-[10px] font-bold">i</span>
-        "Online" reflects activity in the last 5 minutes — it's a proxy, not a live/real-time connection. Use Refresh to get the latest status.
+        "Online" reflects activity in the last 5 minutes, not a live/real-time connection. Use Refresh to get the latest status.
       </p>
 
       <table className="min-w-full bg-white shadow rounded">
