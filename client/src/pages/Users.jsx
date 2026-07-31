@@ -9,6 +9,7 @@ const Users = () => {
   const { user: currentUser } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [resetTarget, setResetTarget] = useState(null);
   const [newPassword, setNewPassword] = useState('');
 
@@ -16,14 +17,17 @@ const Users = () => {
     fetchUsers();
   }, []);
 
-  const fetchUsers = async () => {
+  const fetchUsers = async ({ isManualRefresh = false } = {}) => {
+    if (isManualRefresh) setRefreshing(true);
     try {
       const res = await api.get('/users');
       setUsers(res.data || []);
+      if (isManualRefresh) toast.success('User list refreshed');
     } catch (err) {
       toast.error('Failed to load users');
     } finally {
       setLoading(false);
+      if (isManualRefresh) setRefreshing(false);
     }
   };
 
@@ -68,10 +72,23 @@ const Users = () => {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-1">
         <h1 className="text-2xl font-bold">User Management</h1>
-        <button onClick={fetchUsers} className="text-sm text-blue-600 hover:underline">Refresh</button>
+        <button
+          onClick={() => fetchUsers({ isManualRefresh: true })}
+          disabled={refreshing}
+          className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline disabled:text-gray-400 disabled:no-underline"
+        >
+          {refreshing && (
+            <span className="w-3.5 h-3.5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin inline-block" />
+          )}
+          {refreshing ? 'Refreshing...' : 'Refresh'}
+        </button>
       </div>
+      <p className="text-xs text-gray-400 mb-4 flex items-center gap-1">
+        <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-600 text-[10px] font-bold">i</span>
+        "Online" reflects activity in the last 5 minutes — it's a proxy, not a live/real-time connection. Use Refresh to get the latest status.
+      </p>
 
       <table className="min-w-full bg-white shadow rounded">
         <thead>
@@ -80,7 +97,7 @@ const Users = () => {
             <th className="text-left">Email</th>
             <th className="text-left">Role</th>
             <th className="text-left">Status</th>
-            <th className="text-left">Online</th>
+            <th className="text-left" title="Active within the last 5 minutes — not real-time">Online</th>
             <th className="text-left">Last Login</th>
             <th className="text-left">Joined</th>
             <th className="text-left">Actions</th>
@@ -135,7 +152,6 @@ const Users = () => {
       </table>
       <p className="text-xs text-gray-500 mt-2">
         You can't change your own role or deactivate your own account — ask another Administrator if you need that changed.
-        "Online" means active in the last 5 minutes — not real-time presence.
       </p>
 
       {resetTarget && (
