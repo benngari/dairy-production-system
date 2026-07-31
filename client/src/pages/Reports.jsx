@@ -57,6 +57,17 @@ const Reports = () => {
     }
   };
 
+const handleDeleteDailyStock = async (item) => {
+    if (!window.confirm(`Move ${item.productType} ${item.size} (${new Date(item.date).toLocaleDateString()}) to trash?`)) return;
+    try {
+      await api.delete(`/daily-stock/${item._id}`);
+      toast.success('Moved to trash');
+      fetchDailyStockData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Error deleting entry');
+    }
+  };
+
   const fetchSummary = async () => {
     try {
       const res = await api.get(`/reports/summary?period=${period}`);
@@ -351,6 +362,7 @@ const Reports = () => {
                   <th>Closing</th>
                   <th>Sold</th>
                   <th>Revenue</th>
+                  {user?.role === 'Administrator' && <th>Actions</th>}
                 </tr>
               </thead>
               <tbody>
@@ -364,6 +376,11 @@ const Reports = () => {
                     <td className="text-center">{row.closingStock}</td>
                     <td className="text-center">{row.soldQuantity}</td>
                     <td className="text-center">KSh {(row.revenue || 0).toFixed(2)}</td>
+                    {user?.role === 'Administrator' && (
+                      <td className="text-center">
+                        <button onClick={() => handleDeleteDailyStock(row)} className="text-red-600 text-sm hover:underline">Delete</button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

@@ -12,27 +12,26 @@ function normalizeDate(dateStr) {
 }
 
 // GET /api/daily-stock?date=YYYY-MM-DD
-// Returns all 10 product/size rows for the given day (default today),
-// auto-creating any missing rows with opening stock carried forward from
-// the most recent prior day that has a record for that product/size.
 exports.getDailyStock = async (req, res) => {
   try {
     const date = normalizeDate(req.query.date);
+    const today = normalizeDate();
+    const isToday = date.getTime() === today.getTime();
     const settings = (await Settings.findOne()) || {};
 
     const rows = [];
     for (const productType of PRODUCTS) {
       for (const size of SIZES) {
-        let record = await DailyStock.findOne({ date, productType, size });
+        let record = await DailyStock.findOne({ date, productType, size, isDeleted: { $ne: true } });
+        const priceTable = productType === 'Yoghurt' ? settings.sellingPrices?.yoghurt : settings.sellingPrices?.mala;
+        const currentPrice = priceTable?.[size] || 0;
 
         if (!record) {
           const previous = await DailyStock.findOne({
-            productType, size, date: { $lt: date }
+            productType, size, date: { $lt: date }, isDeleted: { $ne: true }
           }).sort({ date: -1 });
 
           const openingStock = previous ? previous.closingStock : 0;
-          const priceTable = productType === 'Yoghurt' ? settings.sellingPrices?.yoghurt : settings.sellingPrices?.mala;
-          const unitPrice = priceTable?.[size] || 0;
 
           record = await DailyStock.create({
             date, productType, size,
@@ -40,10 +39,14 @@ exports.getDailyStock = async (req, res) => {
             addedStock: 0,
             closingStock: openingStock,
             soldQuantity: 0,
-            unitPrice,
+            unitPrice: currentPrice,
             revenue: 0,
             recordedBy: req.user.id
           });
+        } else if (isToday && record.unitPrice !== currentPrice) {
+          record.unitPrice = currentPrice;
+          record.revenue = record.soldQuantity * currentPrice;
+          await record.save();
         }
         rows.push(record);
       }
@@ -60,7 +63,7 @@ exports.getDailyStock = async (req, res) => {
   }
 };
 
-// PUT /api/daily-stock/:id — update addedStock/closingStock for one row
+// PUT /api/daily-stock/:id
 exports.updateDailyStock = async (req, res) => {
   try {
     const { addedStock, closingStock } = req.body;
@@ -88,11 +91,81 @@ exports.updateDailyStock = async (req, res) => {
   }
 };
 
+// DELETE /api/daily-stock/:id — Administrator only, soft delete
+exports.deleteDailyStock = async (req, res) => {
+  try {
+    const record = await DailyStock.findById(req.params.id);
+    if (!record) return res.status(404).json({ message: 'Daily stock record not found' });
+    record.isDeleted = true;
+    record.deletedAt = new Date();
+    record.deletedBy = req.user.id;
+    await record.save();
+    await logAction(req, {
+      action: 'delete',
+      entityType: 'DailyStock',
+      entityId: record._id,
+      entityLabel: `${record.productType} ${record.size} - ${record.date.toDateString()}`
+    });
+    res.json({ message: 'Daily stock entry moved to trash' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// GET /api/daily-stock/trash — Administrator only
+exports.getDeletedDailyStock = async (req, res) => {
+  try {
+    const items = await DailyStock.find({ isDeleted: true }).populate('deletedBy', 'name').sort({ deletedAt: -1 });
+    res.json(items);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// PATCH /api/daily-stock/:id/restore — Administrator only
+exports.restoreDailyStock = async (req, res) => {
+  try {
+    const record = await DailyStock.findById(req.params.id);
+    if (!record) return res.status(404).json({ message: 'Daily stock record not found' });
+    record.isDeleted = false;
+    record.deletedAt = undefined;
+    record.deletedBy = undefined;
+    await record.save();
+    await logAction(req, {
+      action: 'restore',
+      entityType: 'DailyStock',
+      entityId: record._id,
+      entityLabel: `${record.productType} ${record.size} - ${record.date.toDateString()}`
+    });
+    res.json(record);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// DELETE /api/daily-stock/:id/permanent — Administrator only, irreversible
+exports.permanentlyDeleteDailyStock = async (req, res) => {
+  try {
+    const record = await DailyStock.findById(req.params.id);
+    if (!record) return res.status(404).json({ message: 'Daily stock record not found' });
+    await logAction(req, {
+      action: 'permanent_delete',
+      entityType: 'DailyStock',
+      entityId: record._id,
+      entityLabel: `${record.productType} ${record.size} - ${record.date.toDateString()}`
+    });
+    await DailyStock.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Daily stock entry permanently deleted' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // GET /api/daily-stock/history?startDate&endDate&productType&size
 exports.getDailyStockHistory = async (req, res) => {
   try {
     const { startDate, endDate, productType, size } = req.query;
-    const filter = {};
+    const filter = { isDeleted: { $ne: true } };
     if (startDate && endDate) {
       filter.date = { $gte: normalizeDate(startDate), $lte: normalizeDate(endDate) };
     }
@@ -106,11 +179,11 @@ exports.getDailyStockHistory = async (req, res) => {
   }
 };
 
-// GET /api/daily-stock/summary?startDate&endDate — totals grouped by day
+// GET /api/daily-stock/summary?startDate&endDate
 exports.getDailyStockSummary = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
-    const filter = {};
+    const filter = { isDeleted: { $ne: true } };
     if (startDate && endDate) {
       filter.date = { $gte: normalizeDate(startDate), $lte: normalizeDate(endDate) };
     }

@@ -1,19 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/client';
 import toast from 'react-hot-toast';
-
-const SIZES = ['500ml', '1L', '2L', '3L', '5L'];
+import { useAuth } from '../context/AuthContext';
 
 const ProfitCalculator = () => {
-  const [tab, setTab] = useState('daily'); // 'daily' or 'legacy'
+  const { user } = useAuth();
+  const [tab, setTab] = useState('daily');
 
-  // --- Daily Stock & Revenue tab state ---
   const [date, setDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [rows, setRows] = useState([]);
-  const [edits, setEdits] = useState({}); // { [rowId]: { addedStock, closingStock } }
+  const [edits, setEdits] = useState({});
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  // --- Legacy recipe-based profit calc state ---
   const [recipes, setRecipes] = useState([]);
   const [selectedRecipe, setSelectedRecipe] = useState('');
   const [settings, setSettings] = useState({ labourCostPerHour: 20, consumablesMarkup: 5 });
@@ -49,20 +48,41 @@ const ProfitCalculator = () => {
   });
 
   const handleEditChange = (rowId, field, value) => {
+    const row = rows.find(r => r._id === rowId);
     setEdits({
       ...edits,
-      [rowId]: { ...getEdited(rows.find(r => r._id === rowId)), [field]: parseFloat(value) || 0 }
+      [rowId]: { ...getEdited(row), [field]: parseFloat(value) || 0 }
     });
   };
 
-  const handleSaveRow = async (row) => {
-    const edited = getEdited(row);
+  const handleSaveAll = async () => {
+    const changedIds = Object.keys(edits);
+    if (changedIds.length === 0) {
+      toast('No changes to save');
+      return;
+    }
+    setSaving(true);
     try {
-      await api.put(`/daily-stock/${row._id}`, edited);
-      toast.success(`${row.productType} ${row.size} updated`);
+      await Promise.all(
+        changedIds.map(id => api.put(`/daily-stock/${id}`, edits[id]))
+      );
+      toast.success(`Saved ${changedIds.length} ${changedIds.length === 1 ? 'entry' : 'entries'}`);
       fetchDailyStock();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Error saving row');
+      toast.error(err.response?.data?.message || 'Error saving changes');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteRow = async (row) => {
+    if (!window.confirm(`Move ${row.productType} ${row.size} (${date}) to trash?`)) return;
+    try {
+      await api.delete(`/daily-stock/${row._id}`);
+      toast.success('Moved to trash');
+      fetchDailyStock();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Error deleting entry');
     }
   };
 
@@ -78,6 +98,7 @@ const ProfitCalculator = () => {
     return acc;
   }, { sold: 0, revenue: 0 });
 
+  const hasUnsavedChanges = Object.keys(edits).length > 0;
   const yoghurtRows = rows.filter(r => r.productType === 'Yoghurt');
   const malaRows = rows.filter(r => r.productType === 'Mala');
 
@@ -94,15 +115,16 @@ const ProfitCalculator = () => {
             <th>Sold</th>
             <th>Unit Price</th>
             <th>Revenue</th>
-            <th></th>
+            {user?.role === 'Administrator' && <th></th>}
           </tr>
         </thead>
         <tbody>
           {tableRows.map(row => {
             const e = getEdited(row);
             const sold = computeSold(row);
+            const isDirty = !!edits[row._id];
             return (
-              <tr key={row._id} className="border-b">
+              <tr key={row._id} className={`border-b ${isDirty ? 'bg-amber-50' : ''}`}>
                 <td className="py-1">{row.size}</td>
                 <td className="text-center">{row.openingStock}</td>
                 <td className="text-center">
@@ -124,9 +146,11 @@ const ProfitCalculator = () => {
                 <td className={`text-center font-medium ${sold < 0 ? 'text-red-600' : ''}`}>{sold}</td>
                 <td className="text-center">KSh {row.unitPrice}</td>
                 <td className="text-center font-medium">KSh {computeRevenue(row).toFixed(2)}</td>
-                <td className="text-center">
-                  <button onClick={() => handleSaveRow(row)} className="text-green-600 text-xs hover:underline">Save</button>
-                </td>
+                {user?.role === 'Administrator' && (
+                  <td className="text-center">
+                    <button onClick={() => handleDeleteRow(row)} className="text-red-600 text-xs hover:underline">Delete</button>
+                  </td>
+                )}
               </tr>
             );
           })}
@@ -157,7 +181,7 @@ const ProfitCalculator = () => {
 
       {tab === 'daily' && (
         <>
-          <div className="bg-white p-4 rounded shadow mb-4 flex items-center space-x-4">
+          <div className="bg-white p-4 rounded shadow mb-4 flex flex-wrap items-center gap-4">
             <label className="text-sm font-medium">Date</label>
             <input
               type="date"
@@ -165,9 +189,16 @@ const ProfitCalculator = () => {
               onChange={(e) => setDate(e.target.value)}
               className="border p-2 rounded"
             />
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-500 flex-1 min-w-[200px]">
               Opening stock is carried forward automatically from the previous day's closing stock.
             </p>
+            <button
+              onClick={handleSaveAll}
+              disabled={saving || !hasUnsavedChanges}
+              className="bg-green-600 text-white px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {saving ? 'Saving...' : hasUnsavedChanges ? `Save All (${Object.keys(edits).length})` : 'Save All'}
+            </button>
           </div>
 
           {loading ? (

@@ -3,9 +3,10 @@ import api from '../api/client';
 import toast from 'react-hot-toast';
 
 const TABS = [
-  { id: 'ingredients', label: 'Ingredients', endpoint: '/ingredients', nameField: 'name' },
-  { id: 'packaging', label: 'Packaging', endpoint: '/packaging', nameField: 'size' },
-  { id: 'recipes', label: 'Recipes', endpoint: '/recipes', nameField: 'name' }
+  { id: 'ingredients', label: 'Ingredients', endpoint: '/ingredients', labelFn: (item) => item.name },
+  { id: 'packaging', label: 'Packaging', endpoint: '/packaging', labelFn: (item) => item.size },
+  { id: 'recipes', label: 'Recipes', endpoint: '/recipes', labelFn: (item) => item.name },
+  { id: 'dailyStock', label: 'Daily Stock', endpoint: '/daily-stock', labelFn: (item) => `${item.productType} ${item.size} - ${new Date(item.date).toLocaleDateString()}` }
 ];
 
 const Trash = () => {
@@ -78,7 +79,7 @@ const Trash = () => {
         <table className="min-w-full bg-white shadow rounded">
           <thead>
             <tr className="border-b">
-              <th className="p-2 text-left">Name</th>
+              <th className="p-2 text-left">Item</th>
               <th className="text-left">Deleted By</th>
               <th className="text-left">Deleted At</th>
               <th className="text-left">Actions</th>
@@ -87,7 +88,7 @@ const Trash = () => {
           <tbody>
             {items.map(item => (
               <tr key={item._id} className="border-b">
-                <td className="p-2">{item[activeTab.nameField]}</td>
+                <td className="p-2">{activeTab.labelFn(item)}</td>
                 <td className="text-sm text-gray-500">{item.deletedBy?.name || 'Unknown'}</td>
                 <td className="text-sm text-gray-500">{item.deletedAt ? new Date(item.deletedAt).toLocaleString() : '-'}</td>
                 <td>
