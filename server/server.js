@@ -22,11 +22,39 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
 
+// One-time self-healing check: the dailyStocks collection originally had a
+// plain unique index (date+productType+size) before Trash/soft-delete was
+// added. That old index doesn't know about isDeleted, so it wrongly blocks
+// creating a new row when an old soft-deleted row shares the same
+// date/product/size — causing "Failed to load daily stock" errors. If we
+// find that outdated index, drop it so Mongoose recreates the correct
+// partial index (which only enforces uniqueness among non-deleted rows).
+// Safe to run on every boot — it's a no-op once the index is already fixed.
+async function fixDailyStockIndex() {
+  try {
+    const collection = mongoose.connection.collection('dailystocks');
+    const indexes = await collection.indexes();
+    const staleIndex = indexes.find(
+      idx => idx.name === 'date_1_productType_1_size_1' && !idx.partialFilterExpression
+    );
+    if (staleIndex) {
+      await collection.dropIndex(staleIndex.name);
+      console.log('Dropped outdated dailystocks index — Mongoose will recreate it correctly.');
+    }
+  } catch (err) {
+    // Non-fatal — e.g. collection doesn't exist yet on a brand-new database.
+    console.log('dailystocks index check skipped:', err.message);
+  }
+}
+
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
-.then(() => console.log('MongoDB connected'))
+.then(async () => {
+  console.log('MongoDB connected');
+  await fixDailyStockIndex();
+})
 .catch(err => console.error('MongoDB connection error:', err));
 
 app.use('/api/auth', authRoutes);
