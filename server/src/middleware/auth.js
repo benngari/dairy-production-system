@@ -13,6 +13,12 @@ exports.protect = async (req, res, next) => {
     req.user = await User.findById(decoded.id).select('-password');
     if (!req.user) return res.status(401).json({ message: 'User not found' });
     if (req.user.isActive === false) return res.status(401).json({ message: 'Account deactivated' });
+
+    // Fire-and-forget: mark this user as "active now" without slowing down
+    // the actual request. Used by the Users page to show an "online" badge
+    // for anyone active in the last few minutes.
+    User.findByIdAndUpdate(req.user._id, { lastActiveAt: new Date() }).catch(() => {});
+
     next();
   } catch (error) {
     res.status(401).json({ message: 'Invalid token' });

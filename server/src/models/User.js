@@ -11,6 +11,8 @@ const userSchema = new mongoose.Schema({
     default: 'Production Operator'
   },
   isActive: { type: Boolean, default: true },
+  lastLoginAt: Date,
+  lastActiveAt: Date,
   createdAt: { type: Date, default: Date.now }
 });
 

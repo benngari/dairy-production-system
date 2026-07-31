@@ -60,3 +60,16 @@ exports.resetUserPassword = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// GET /api/users/online — Administrator only. "Online" is a proxy, not true
+// real-time presence — anyone whose lastActiveAt is within the last 5
+// minutes (based on their authenticated requests hitting the server).
+exports.getOnlineUsers = async (req, res) => {
+  try {
+    const cutoff = new Date(Date.now() - 5 * 60 * 1000);
+    const users = await User.find({ lastActiveAt: { $gte: cutoff } }).select('name email role lastActiveAt');
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

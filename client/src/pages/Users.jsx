@@ -27,6 +27,11 @@ const Users = () => {
     }
   };
 
+  const isOnline = (u) => {
+    if (!u.lastActiveAt) return false;
+    return (Date.now() - new Date(u.lastActiveAt).getTime()) < 5 * 60 * 1000;
+  };
+
   const handleRoleChange = async (id, role) => {
     try {
       await api.patch(`/users/${id}/role`, { role });
@@ -63,7 +68,11 @@ const Users = () => {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">User Management</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-bold">User Management</h1>
+        <button onClick={fetchUsers} className="text-sm text-blue-600 hover:underline">Refresh</button>
+      </div>
+
       <table className="min-w-full bg-white shadow rounded">
         <thead>
           <tr className="border-b">
@@ -71,6 +80,8 @@ const Users = () => {
             <th className="text-left">Email</th>
             <th className="text-left">Role</th>
             <th className="text-left">Status</th>
+            <th className="text-left">Online</th>
+            <th className="text-left">Last Login</th>
             <th className="text-left">Joined</th>
             <th className="text-left">Actions</th>
           </tr>
@@ -95,6 +106,16 @@ const Users = () => {
                   {u.isActive !== false ? 'Active' : 'Deactivated'}
                 </span>
               </td>
+              <td>
+                {isOnline(u) ? (
+                  <span className="inline-flex items-center gap-1 text-green-600 text-xs">
+                    <span className="w-2 h-2 rounded-full bg-green-500"></span> Online
+                  </span>
+                ) : (
+                  <span className="text-gray-400 text-xs">Offline</span>
+                )}
+              </td>
+              <td className="text-sm text-gray-500">{u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString() : 'Never'}</td>
               <td className="text-sm text-gray-500">{new Date(u.createdAt).toLocaleDateString()}</td>
               <td className="space-x-3">
                 <button
@@ -104,10 +125,7 @@ const Users = () => {
                 >
                   {u.isActive !== false ? 'Deactivate' : 'Activate'}
                 </button>
-                <button
-                  onClick={() => { setResetTarget(u); setNewPassword(''); }}
-                  className="text-sm text-blue-600 hover:underline"
-                >
+                <button onClick={() => { setResetTarget(u); setNewPassword(''); }} className="text-sm text-blue-600 hover:underline">
                   Reset Password
                 </button>
               </td>
@@ -117,6 +135,7 @@ const Users = () => {
       </table>
       <p className="text-xs text-gray-500 mt-2">
         You can't change your own role or deactivate your own account — ask another Administrator if you need that changed.
+        "Online" means active in the last 5 minutes — not real-time presence.
       </p>
 
       {resetTarget && (
@@ -136,11 +155,7 @@ const Users = () => {
                 autoFocus
               />
               <div className="flex justify-end space-x-2">
-                <button
-                  type="button"
-                  onClick={() => { setResetTarget(null); setNewPassword(''); }}
-                  className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded"
-                >
+                <button type="button" onClick={() => { setResetTarget(null); setNewPassword(''); }} className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded">
                   Cancel
                 </button>
                 <button type="submit" className="px-4 py-2 text-sm bg-green-600 text-white rounded hover:bg-green-700">

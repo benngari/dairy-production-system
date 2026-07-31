@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const AuditLog = require('../models/AuditLog');
 
 const ALLOWED_SELF_REGISTER_ROLES = ['Manager', 'Production Operator', 'Store Keeper'];
 
@@ -10,9 +11,6 @@ exports.register = async (req, res) => {
     if (existing) return res.status(400).json({ message: 'User already exists' });
 
     const count = await User.countDocuments();
-    // First user is always Administrator, regardless of what was submitted.
-    // Everyone after that can only self-select from the non-admin role list —
-    // Administrator can never be granted through public registration.
     const finalRole = count === 0
       ? 'Administrator'
       : (ALLOWED_SELF_REGISTER_ROLES.includes(role) ? role : 'Production Operator');
@@ -34,6 +32,19 @@ exports.login = async (req, res) => {
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) return res.status(401).json({ message: 'Invalid credentials' });
+
+    user.lastLoginAt = new Date();
+    user.lastActiveAt = new Date();
+    await user.save();
+
+    AuditLog.create({
+      user: user._id,
+      userName: user.name || user.email,
+      action: 'login',
+      entityType: 'User',
+      entityId: user._id,
+      entityLabel: user.email
+    }).catch(err => console.error('Login audit log failed:', err.message));
 
     const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '30d' });
     res.json({ token, user: { id: user._id, name: user.name, email, role: user.role } });
