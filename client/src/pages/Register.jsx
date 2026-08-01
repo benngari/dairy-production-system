@@ -20,9 +20,10 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    const success = await register(name, email, password, role);
+    const result = await register(name, email, password, role);
     setLoading(false);
-    if (success) navigate('/');
+    if (result === true) navigate('/');
+    else if (result === 'pending') navigate('/login');
   };
 
   return (

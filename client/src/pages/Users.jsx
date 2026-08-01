@@ -119,9 +119,13 @@ const Users = () => {
                 </select>
               </td>
               <td>
-                <span className={u.isActive !== false ? 'text-green-600' : 'text-red-600'}>
-                  {u.isActive !== false ? 'Active' : 'Deactivated'}
-                </span>
+                {u.isActive !== false ? (
+                  <span className="text-green-600">Active</span>
+                ) : u.lastLoginAt ? (
+                  <span className="text-red-600">Deactivated</span>
+                ) : (
+                  <span className="text-amber-600 font-medium">Pending Approval</span>
+                )}
               </td>
               <td>
                 {isOnline(u) ? (

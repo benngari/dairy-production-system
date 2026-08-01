@@ -39,6 +39,10 @@ export const AuthProvider = ({ children }) => {
   const register = async (name, email, password, role) => {
     try {
       const res = await api.post('/auth/register', { name, email, password, role });
+      if (res.data.pending) {
+        toast.success(res.data.message || 'Registration submitted. Waiting for admin approval.');
+        return 'pending';
+      }
       localStorage.setItem('token', res.data.token);
       setUser(res.data.user);
       toast.success('Registered successfully');
@@ -60,7 +64,7 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     toast.success('Logged out');
   };
-  
+
 
   const value = { user, loading, login, register, logout };
 
