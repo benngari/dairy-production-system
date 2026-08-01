@@ -195,21 +195,24 @@ body {
 .dark .force-light select,
 .dark .force-light textarea {
   background-color: #ffffff !important;
-  color: #1c1917 !important;
-  border-color: #d6d3d1 !important;
+  color: #111827 !important;
+  border-color: #d1d5db !important;
 }
 .dark .force-light input::placeholder,
 .dark .force-light textarea::placeholder {
-  color: #a8a29e !important;
+  color: #9ca3af !important;
 }
-.dark .force-light .text-stone-900,
-.dark .force-light h1,
-.dark .force-light h2 {
-  color: #1c1917 !important;
+.dark .force-light .text-gray-900 {
+  color: #111827 !important;
 }
-.dark .force-light .text-stone-500 {
-  color: #78716c !important;
+.dark .force-light .text-gray-700 {
+  color: #374151 !important;
 }
+.dark .force-light .text-gray-500,
+.dark .force-light .text-gray-600 {
+  color: #6b7280 !important;
+}
+.dark .force-light .bg-white\/90,
 .dark .force-light .bg-white\/95 {
-  background-color: rgba(255, 255, 255, 0.95) !important;
+  background-color: rgba(255, 255, 255, 0.9) !important;
 }
