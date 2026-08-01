@@ -37,14 +37,11 @@ const Login = () => {
             Manage yoghurt and mala production, inventory, packaging, and reports — all in one place.
           </p>
         </div>
-        {/* Wave divider — a subtle "milk pour" edge where the photo meets the form panel */}
-        <svg
-          className="hidden lg:block absolute top-0 right-0 h-full w-10 translate-x-1/2"
-          viewBox="0 0 40 800"
-          preserveAspectRatio="none"
-        >
-          <path d="M20,0 C35,150 5,250 20,400 C35,550 5,650 20,800 L40,800 L40,0 Z" fill="#fafaf9" />
-        </svg>
+        {/* Soft fade where the photo blends into the cream panel — no hard edge */}
+        <div
+          className="hidden lg:block absolute top-0 right-0 h-full w-40 pointer-events-none"
+          style={{ background: 'linear-gradient(to right, transparent, #fffbeb)' }}
+        />
       </div>
 
       {/* Right panel — dairy-themed background */}
