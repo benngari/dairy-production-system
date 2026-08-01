@@ -49,11 +49,18 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch (err) {
+      // Don't block logout on a network/API hiccup — still clear local
+      // session either way. The event just won't be recorded this time.
+    }
     localStorage.removeItem('token');
     setUser(null);
     toast.success('Logged out');
   };
+  
 
   const value = { user, loading, login, register, logout };
 

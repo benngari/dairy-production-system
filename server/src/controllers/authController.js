@@ -16,6 +16,17 @@ exports.register = async (req, res) => {
       : (ALLOWED_SELF_REGISTER_ROLES.includes(role) ? role : 'Production Operator');
 
     const user = await User.create({ name, email, password, role: finalRole });
+
+    AuditLog.create({
+      user: user._id,
+      userName: user.name || user.email,
+      action: 'register',
+      entityType: 'User',
+      entityId: user._id,
+      entityLabel: user.email,
+      details: `Registered as ${finalRole}`
+    }).catch(err => console.error('Register audit log failed:', err.message));
+
     const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '30d' });
 
     res.status(201).json({ token, user: { id: user._id, name, email, role: finalRole } });
@@ -48,6 +59,25 @@ exports.login = async (req, res) => {
 
     const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '30d' });
     res.json({ token, user: { id: user._id, name: user.name, email, role: user.role } });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// POST /api/auth/logout — requires a valid token (still logged in at the
+// moment this is called), so we can attribute the logout event correctly.
+exports.logout = async (req, res) => {
+  try {
+    AuditLog.create({
+      user: req.user._id,
+      userName: req.user.name || req.user.email,
+      action: 'logout',
+      entityType: 'User',
+      entityId: req.user._id,
+      entityLabel: req.user.email
+    }).catch(err => console.error('Logout audit log failed:', err.message));
+
+    res.json({ message: 'Logged out' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
