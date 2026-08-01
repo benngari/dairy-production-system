@@ -14,7 +14,10 @@ const ACTION_COLORS = {
   password_reset: 'text-orange-600',
   activate: 'text-green-600',
   deactivate: 'text-red-600',
-  stock_adjust: 'text-gray-600'
+  stock_adjust: 'text-gray-600',
+  login: 'text-sky-600',
+  logout: 'text-amber-600',
+  register: 'text-teal-600'
 };
 
 const AuditLog = () => {
