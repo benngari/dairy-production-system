@@ -24,7 +24,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex force-light">
       {/* Left panel — farm image, hidden on small screens */}
       <div
         className="hidden lg:flex lg:w-1/2 relative bg-cover bg-center"

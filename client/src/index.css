@@ -176,3 +176,40 @@ body {
 .dark .hover\:bg-stone-50:hover {
   background-color: #334155 !important;
 }
+
+/* --- Fix: two text classes used across the app were missing from the dark
+   mode remap, making some headings/labels nearly invisible on dark cards --- */
+.dark .text-stone-800 {
+  color: #f1f5f9 !important;
+}
+
+.dark .text-stone-400 {
+  color: #94a3b8 !important;
+}
+
+/* --- Auth pages (Login/Register) are intentionally always light-themed —
+   they use a fixed cream/white design with no dark variant. If dark mode
+   is on globally, force these specific pages back to light regardless,
+   rather than letting them end up in a broken half-light/half-dark state. --- */
+.dark .force-light input,
+.dark .force-light select,
+.dark .force-light textarea {
+  background-color: #ffffff !important;
+  color: #1c1917 !important;
+  border-color: #d6d3d1 !important;
+}
+.dark .force-light input::placeholder,
+.dark .force-light textarea::placeholder {
+  color: #a8a29e !important;
+}
+.dark .force-light .text-stone-900,
+.dark .force-light h1,
+.dark .force-light h2 {
+  color: #1c1917 !important;
+}
+.dark .force-light .text-stone-500 {
+  color: #78716c !important;
+}
+.dark .force-light .bg-white\/95 {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+}
