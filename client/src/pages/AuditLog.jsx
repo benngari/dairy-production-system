@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../api/client';
 import toast from 'react-hot-toast';
 
-const ENTITY_TYPES = ['All', 'Production', 'Ingredient', 'Packaging', 'Recipe', 'Settings', 'User'];
+const ENTITY_TYPES = ['All', 'Production', 'Ingredient', 'Packaging', 'Recipe', 'DailyStock', 'Settings', 'User'];
 
 const ACTION_COLORS = {
   create: 'text-green-600',
