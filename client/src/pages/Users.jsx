@@ -12,6 +12,7 @@ const Users = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [resetTarget, setResetTarget] = useState(null);
   const [newPassword, setNewPassword] = useState('');
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     fetchUsers();
@@ -68,6 +69,15 @@ const Users = () => {
     }
   };
 
+  const searchLower = search.trim().toLowerCase();
+  const filteredUsers = searchLower
+    ? users.filter(u =>
+        (u.name || '').toLowerCase().includes(searchLower) ||
+        (u.email || '').toLowerCase().includes(searchLower) ||
+        (u.role || '').toLowerCase().includes(searchLower)
+      )
+    : users;
+
   if (loading) return <div>Loading users...</div>;
 
   return (
@@ -90,6 +100,13 @@ const Users = () => {
         "Online" reflects activity in the last 5 minutes, not a live/real-time connection. Use Refresh to get the latest status.
       </p>
 
+      <input
+        type="text"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Search by name, email, or role..."
+        className="border p-2 rounded text-sm w-full max-w-sm mb-4"
+      />
       <table className="min-w-full bg-white shadow rounded">
         <thead>
           <tr className="border-b">
@@ -104,7 +121,7 @@ const Users = () => {
           </tr>
         </thead>
         <tbody>
-          {users.map(u => (
+          {filteredUsers.map(u => (
             <tr key={u._id} className="border-b">
               <td className="p-2">{u.name} {u._id === currentUser?.id && <span className="text-xs text-gray-400">(you)</span>}</td>
               <td>{u.email}</td>
@@ -152,6 +169,11 @@ const Users = () => {
               </td>
             </tr>
           ))}
+          {filteredUsers.length === 0 && (
+            <tr><td colSpan="8" className="p-4 text-center text-gray-500">
+              {searchLower ? 'No matching users found.' : 'No users yet.'}
+            </td></tr>
+          )}
         </tbody>
       </table>
       <p className="text-xs text-gray-500 mt-2">

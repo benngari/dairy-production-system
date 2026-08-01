@@ -23,30 +23,57 @@ const ACTION_COLORS = {
 const AuditLog = () => {
   const [logs, setLogs] = useState([]);
   const [filter, setFilter] = useState('All');
+  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     fetchLogs();
   }, [filter]);
 
-  const fetchLogs = async () => {
-    setLoading(true);
+  const fetchLogs = async ({ isManualRefresh = false } = {}) => {
+    if (isManualRefresh) setRefreshing(true);
     try {
       const params = filter !== 'All' ? `?entityType=${filter}` : '';
       const res = await api.get(`/audit-log${params}`);
       setLogs(res.data || []);
+      if (isManualRefresh) toast.success('Audit log refreshed');
     } catch (err) {
       toast.error('Failed to load audit log');
     } finally {
       setLoading(false);
+      if (isManualRefresh) setRefreshing(false);
     }
   };
 
+  const searchLower = search.trim().toLowerCase();
+  const filteredLogs = searchLower
+    ? logs.filter(log =>
+        (log.userName || '').toLowerCase().includes(searchLower) ||
+        (log.action || '').toLowerCase().includes(searchLower) ||
+        (log.entityType || '').toLowerCase().includes(searchLower) ||
+        (log.entityLabel || '').toLowerCase().includes(searchLower) ||
+        (log.details || '').toLowerCase().includes(searchLower)
+      )
+    : logs;
+
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">Audit Log</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-bold">Audit Log</h1>
+        <button
+          onClick={() => fetchLogs({ isManualRefresh: true })}
+          disabled={refreshing}
+          className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline disabled:text-gray-400 disabled:no-underline"
+        >
+          {refreshing && (
+            <span className="w-3.5 h-3.5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin inline-block" />
+          )}
+          {refreshing ? 'Refreshing...' : 'Refresh'}
+        </button>
+      </div>
 
-      <div className="flex flex-wrap gap-2 mb-4">
+      <div className="flex flex-wrap items-center gap-2 mb-4">
         {ENTITY_TYPES.map(t => (
           <button
             key={t}
@@ -56,6 +83,13 @@ const AuditLog = () => {
             {t}
           </button>
         ))}
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by user, action, item, details..."
+          className="border p-1.5 rounded text-sm flex-1 min-w-[200px] ml-auto"
+        />
       </div>
 
       {loading ? (
@@ -73,7 +107,7 @@ const AuditLog = () => {
             </tr>
           </thead>
           <tbody>
-            {logs.map(log => (
+            {filteredLogs.map(log => (
               <tr key={log._id} className="border-b">
                 <td className="p-2 text-sm text-gray-500">{new Date(log.timestamp).toLocaleString()}</td>
                 <td className="text-sm">{log.userName}</td>
@@ -83,8 +117,10 @@ const AuditLog = () => {
                 <td className="text-sm text-gray-500">{log.details || '-'}</td>
               </tr>
             ))}
-            {logs.length === 0 && (
-              <tr><td colSpan="6" className="p-4 text-center text-gray-500">No activity recorded yet.</td></tr>
+            {filteredLogs.length === 0 && (
+              <tr><td colSpan="6" className="p-4 text-center text-gray-500">
+                {searchLower ? 'No matching activity found.' : 'No activity recorded yet.'}
+              </td></tr>
             )}
           </tbody>
         </table>
