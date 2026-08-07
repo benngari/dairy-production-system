@@ -45,14 +45,19 @@ async function computeBatchBreakdown({ productType, milkLitres, flavours = [], c
   const labour = settings.labourCostPerBatch ?? LABOUR_PER_BATCH;
   const milkCost = milkLitres * MILK_COST_PER_LITRE;
 
-  const sugarKg = milkLitres * SUGAR_PERCENT_OF_MILK;
-  const sugarCost = sugarKg * SUGAR_COST_PER_KG;
+  // Sugar, Starch, and Pectin are only used in Yoghurt production — Mala
+  // uses just Milk, Culture, Labour, and Consumables.
+  let sugarKg = 0, sugarCost = 0, starchGrams = 0, starchCost = 0, pectinGrams = 0, pectinCost = 0;
+  if (productType === 'Yoghurt') {
+    sugarKg = milkLitres * SUGAR_PERCENT_OF_MILK;
+    sugarCost = sugarKg * SUGAR_COST_PER_KG;
 
-  const starchGrams = milkLitres * STARCH_GRAMS_PER_LITRE;
-  const starchCost = (starchGrams / 1000) * STARCH_COST_PER_KG;
+    starchGrams = milkLitres * STARCH_GRAMS_PER_LITRE;
+    starchCost = (starchGrams / 1000) * STARCH_COST_PER_KG;
 
-  const pectinGrams = milkLitres * PECTIN_GRAMS_PER_LITRE;
-  const pectinCost = pectinGrams * PECTIN_COST_PER_GRAM;
+    pectinGrams = milkLitres * PECTIN_GRAMS_PER_LITRE;
+    pectinCost = pectinGrams * PECTIN_COST_PER_GRAM;
+  }
 
   const cultureSachets = milkLitres / CULTURE_LITRES_PER_SACHET;
   const cultureUnitCost = (await findIngredientCost('culture')) || settings.cultureCostPerSachet || 0;
