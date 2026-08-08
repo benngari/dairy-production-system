@@ -6,7 +6,7 @@ import EmptyState from '../components/EmptyState';
 
 const Dashboard = () => {
   const [data, setData] = useState({
-    today: {}, lowStock: [], lowStockPackaging: [], recentBatches: [], weeklyData: [], monthlyData: [],
+    today: {}, lowStock: [], lowStockPackaging: [], recentBatches: [], weeklyData: [], twoWeekData: [], last30Data: [],
     overallTotals: {}, bottleInventory: [], totalBottlesProduced: 0
   });
   const [loading, setLoading] = useState(true);
@@ -68,9 +68,9 @@ const Dashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="app-card">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
             <h3 className="font-semibold text-stone-800">
-              {chartView === 'weekly' ? 'Weekly Production' : 'Monthly Production'}
+              {chartView === 'weekly' ? 'Weekly Production' : chartView === 'twoWeeks' ? '2 Week Production' : 'Last 30 Days Production'}
             </h3>
             <div className="flex text-xs border border-stone-200 rounded-lg overflow-hidden">
               <button
@@ -80,14 +80,26 @@ const Dashboard = () => {
                 Weekly
               </button>
               <button
-                onClick={() => setChartView('monthly')}
-                className={`px-3 py-1 ${chartView === 'monthly' ? 'bg-green-700 text-white' : 'bg-white text-stone-600 hover:bg-stone-50'}`}
+                onClick={() => setChartView('twoWeeks')}
+                className={`px-3 py-1 ${chartView === 'twoWeeks' ? 'bg-green-700 text-white' : 'bg-white text-stone-600 hover:bg-stone-50'}`}
               >
-                Monthly
+                2 Weeks
+              </button>
+              <button
+                onClick={() => setChartView('last30')}
+                className={`px-3 py-1 ${chartView === 'last30' ? 'bg-green-700 text-white' : 'bg-white text-stone-600 hover:bg-stone-50'}`}
+              >
+                Last 30 Days
               </button>
             </div>
           </div>
-          <ProductionChart data={chartView === 'weekly' ? data.weeklyData : data.monthlyData} />
+          <ProductionChart
+            data={
+              chartView === 'weekly' ? data.weeklyData
+              : chartView === 'twoWeeks' ? data.twoWeekData
+              : data.last30Data
+            }
+          />
         </div>
         <div className="app-card">
           <h3 className="font-semibold text-stone-800 mb-3">Low Stock Alerts</h3>

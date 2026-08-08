@@ -36,11 +36,26 @@ exports.getDashboardData = async (req, res) => {
       { $sort: { _id: 1 } }
     ]);
 
-    // Monthly view — every day within the current calendar month (1st to
-    // today), same day-by-day shape as the weekly chart, just a wider range.
-    const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    const monthProductions = await Production.aggregate([
-      { $match: { date: { $gte: firstOfMonth } } },
+    // Rolling windows (not calendar-boundary-based, to avoid the empty
+    // "start of month" edge case) — 2 Weeks and Last 30 Days, same
+    // day-by-day shape as the 7-day weekly chart, just wider ranges.
+    const fourteenDaysAgo = new Date(today);
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 13);
+    const twoWeekProductions = await Production.aggregate([
+      { $match: { date: { $gte: fourteenDaysAgo } } },
+      { $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
+          totalMilk: { $sum: { $ifNull: ["$milkLitres", "$milkQuantity"] } },
+          totalOutput: { $sum: "$producedQuantity" }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+
+    const thirtyDaysAgo = new Date(today);
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29);
+    const last30Productions = await Production.aggregate([
+      { $match: { date: { $gte: thirtyDaysAgo } } },
       { $group: {
           _id: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
           totalMilk: { $sum: { $ifNull: ["$milkLitres", "$milkQuantity"] } },
@@ -84,7 +99,8 @@ exports.getDashboardData = async (req, res) => {
       lowStockPackaging,
       recentBatches,
       weeklyData: weekProductions,
-      monthlyData: monthProductions,
+      twoWeekData: twoWeekProductions,
+      last30Data: last30Productions,
       overallTotals,
       bottlesProducedBySize: bottlesProducedAgg,
       totalBottlesProduced,
