@@ -36,6 +36,20 @@ exports.getDashboardData = async (req, res) => {
       { $sort: { _id: 1 } }
     ]);
 
+    // Monthly view — every day within the current calendar month (1st to
+    // today), same day-by-day shape as the weekly chart, just a wider range.
+    const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const monthProductions = await Production.aggregate([
+      { $match: { date: { $gte: firstOfMonth } } },
+      { $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
+          totalMilk: { $sum: { $ifNull: ["$milkLitres", "$milkQuantity"] } },
+          totalOutput: { $sum: "$producedQuantity" }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+
     // Overall Yoghurt & Mala totals (all time)
     const overall = await Production.aggregate([
       { $match: { productType: { $in: ['Yoghurt', 'Mala'] } } },
@@ -70,6 +84,7 @@ exports.getDashboardData = async (req, res) => {
       lowStockPackaging,
       recentBatches,
       weeklyData: weekProductions,
+      monthlyData: monthProductions,
       overallTotals,
       bottlesProducedBySize: bottlesProducedAgg,
       totalBottlesProduced,

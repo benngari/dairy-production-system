@@ -10,6 +10,7 @@ const Dashboard = () => {
     overallTotals: {}, bottleInventory: [], totalBottlesProduced: 0
   });
   const [loading, setLoading] = useState(true);
+  const [chartView, setChartView] = useState('weekly');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -67,8 +68,26 @@ const Dashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="app-card">
-          <h3 className="font-semibold text-stone-800 mb-3">Weekly Production</h3>
-          <ProductionChart data={data.weeklyData} />
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold text-stone-800">
+              {chartView === 'weekly' ? 'Weekly Production' : 'Monthly Production'}
+            </h3>
+            <div className="flex text-xs border border-stone-200 rounded-lg overflow-hidden">
+              <button
+                onClick={() => setChartView('weekly')}
+                className={`px-3 py-1 ${chartView === 'weekly' ? 'bg-green-700 text-white' : 'bg-white text-stone-600 hover:bg-stone-50'}`}
+              >
+                Weekly
+              </button>
+              <button
+                onClick={() => setChartView('monthly')}
+                className={`px-3 py-1 ${chartView === 'monthly' ? 'bg-green-700 text-white' : 'bg-white text-stone-600 hover:bg-stone-50'}`}
+              >
+                Monthly
+              </button>
+            </div>
+          </div>
+          <ProductionChart data={chartView === 'weekly' ? data.weeklyData : data.monthlyData} />
         </div>
         <div className="app-card">
           <h3 className="font-semibold text-stone-800 mb-3">Low Stock Alerts</h3>
