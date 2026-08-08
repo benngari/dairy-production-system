@@ -2,11 +2,16 @@ import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const ProductionChart = ({ data }) => {
-  const chartData = data.map(item => ({
+  const chartData = (data || []).map(item => ({
     date: item._id,
     milk: item.totalMilk,
     output: item.totalOutput
   }));
+
+  if (chartData.length === 0) {
+    return <div className="text-sm text-gray-400 text-center py-12">No production data for this period.</div>;
+  }
+
   return (
     <ResponsiveContainer width="100%" height={200}>
       <BarChart data={chartData}>
