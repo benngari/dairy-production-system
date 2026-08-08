@@ -6,7 +6,7 @@ import EmptyState from '../components/EmptyState';
 
 const Dashboard = () => {
   const [data, setData] = useState({
-    today: {}, lowStock: [], lowStockPackaging: [], recentBatches: [], weeklyData: [],
+    today: {}, lowStock: [], lowStockPackaging: [], recentBatches: [], weeklyData: [], monthlyData: [],
     overallTotals: {}, bottleInventory: [], totalBottlesProduced: 0
   });
   const [loading, setLoading] = useState(true);
