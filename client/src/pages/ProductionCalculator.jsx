@@ -211,7 +211,7 @@ const ProductionCalculator = () => {
                     options={COLOUR_OPTIONS}
                     selected={colours}
                     onChange={setColours}
-                    hint="Suggestions are a starting point — add or remove freely."
+                    hint="Suggestions are a starting point - add or remove freely."
                   />
                 </div>
               </div>

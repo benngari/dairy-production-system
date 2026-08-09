@@ -177,7 +177,7 @@ const Users = () => {
         </tbody>
       </table>
       <p className="text-xs text-gray-500 mt-2">
-        You can't change your own role or deactivate your own account — ask another Administrator if you need that changed.
+        You can't change your own role or deactivate your own account - ask another Administrator if you need that changed.
       </p>
 
       {resetTarget && (

@@ -68,7 +68,7 @@ const Trash = () => {
     <div>
       <h1 className="text-2xl font-bold mb-4">Trash</h1>
       <p className="text-sm text-gray-500 mb-4">
-        Deleted items are kept here until permanently removed. Production batches are not included — deleting a batch immediately restores its stock and cannot be undone from here.
+        Deleted items are kept here until permanently removed. Production batches are not included - deleting a batch immediately restores its stock and cannot be undone from here.
       </p>
 
       <div className="flex space-x-2 mb-4">
