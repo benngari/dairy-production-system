@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/client';
 import ProductionChart from '../components/charts/ProductionChart';
-import Spinner from '../components/Spinner';
+import DashboardSkeleton from '../components/DashboardSkeleton';
 import EmptyState from '../components/EmptyState';
 
 const Dashboard = () => {
@@ -26,7 +26,7 @@ const Dashboard = () => {
     fetchData();
   }, []);
 
-  if (loading) return <Spinner label="Loading dashboard..." />;
+  if (loading) return <DashboardSkeleton />;
 
   const totals = data.overallTotals || {};
 
