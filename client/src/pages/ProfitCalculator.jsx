@@ -101,6 +101,7 @@ const ProfitCalculator = () => {
   const hasUnsavedChanges = Object.keys(edits).length > 0;
   const yoghurtRows = rows.filter(r => r.productType === 'Yoghurt');
   const malaRows = rows.filter(r => r.productType === 'Mala');
+  const kefirRows = rows.filter(r => r.productType === 'Kefir');
 
   const renderTable = (title, tableRows) => (
     <div className="bg-white p-4 rounded shadow mb-4">
@@ -207,6 +208,7 @@ const ProfitCalculator = () => {
             <>
               {renderTable('Yoghurt', yoghurtRows)}
               {renderTable('Mala', malaRows)}
+              {renderTable('Kefir', kefirRows)}
 
               <div className="bg-white p-4 rounded shadow grid grid-cols-2 gap-4">
                 <div>

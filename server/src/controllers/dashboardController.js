@@ -2,6 +2,7 @@ const Production = require('../models/Production');
 const Ingredient = require('../models/Ingredient');
 const Packaging = require('../models/Packaging');
 const ProductionHistory = require('../models/ProductionHistory');
+const { PRODUCT_TYPES } = require('../config/productionConstants');
 
 exports.getDashboardData = async (req, res) => {
   try {
@@ -67,7 +68,7 @@ exports.getDashboardData = async (req, res) => {
 
     // Overall Yoghurt & Mala totals (all time)
     const overall = await Production.aggregate([
-      { $match: { productType: { $in: ['Yoghurt', 'Mala'] } } },
+      { $match: { productType: { $in: PRODUCT_TYPES } } },
       { $group: {
           _id: null,
           totalMilkProcessed: { $sum: '$milkLitres' },
@@ -83,7 +84,7 @@ exports.getDashboardData = async (req, res) => {
     };
 
     const bottlesProducedAgg = await Production.aggregate([
-      { $match: { productType: { $in: ['Yoghurt', 'Mala'] } } },
+      { $match: { productType: { $in: PRODUCT_TYPES } } },
       { $unwind: '$packaging' },
       { $group: { _id: '$packaging.size', bottles: { $sum: '$packaging.bottles' } } }
     ]);

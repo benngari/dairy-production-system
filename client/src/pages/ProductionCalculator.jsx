@@ -61,7 +61,7 @@ const ProductionCalculator = () => {
   const handleProductTypeChange = (value) => {
     setProductType(value);
     setBreakdown(null);
-    if (value === 'Mala') {
+    if (value === 'Mala' || value === 'Kefir') {
       setFlavours([]);
       setColours([]);
     }
@@ -179,6 +179,7 @@ const ProductionCalculator = () => {
                 <select value={productType} onChange={(e) => handleProductTypeChange(e.target.value)} className="border p-2 rounded w-full">
                   <option value="Yoghurt">Yoghurt</option>
                   <option value="Mala">Mala</option>
+                  <option value="Kefir">Kefir</option>
                 </select>
               </div>
               <div>
@@ -219,6 +220,9 @@ const ProductionCalculator = () => {
 
             {productType === 'Mala' && (
               <p className="text-sm text-gray-500 mt-4">Mala only uses Culture — no flavours or colours apply.</p>
+            )}
+            {productType === 'Kefir' && (
+              <p className="text-sm text-gray-500 mt-4">Kefir only uses Milk — no culture, flavours, or colours apply.</p>
             )}
 
             <button onClick={handleCalculateBatch} className="mt-4 bg-blue-600 text-white px-4 py-2 rounded">

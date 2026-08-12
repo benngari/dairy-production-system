@@ -26,6 +26,13 @@ const settingsSchema = new mongoose.Schema({
       '2L': { type: Number, default: null },
       '3L': { type: Number, default: 350 },
       '5L': { type: Number, default: 550 }
+    },
+    kefir: {
+      '500ml': { type: Number, default: null },
+      '1L': { type: Number, default: null },
+      '2L': { type: Number, default: null },
+      '3L': { type: Number, default: null },
+      '5L': { type: Number, default: null }
     }
   },
   updatedAt: { type: Date, default: Date.now }

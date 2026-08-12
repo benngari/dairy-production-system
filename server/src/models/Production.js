@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { PRODUCT_TYPES } = require('../config/productionConstants');
 
 const productionSchema = new mongoose.Schema({
   // Legacy recipe-based fields (kept for backward compatibility)
@@ -16,8 +17,8 @@ const productionSchema = new mongoose.Schema({
     bottles: Number
   }],
 
-  // Yoghurt & Mala batch fields
-  productType: { type: String, enum: ['Yoghurt', 'Mala'] },
+  // Yoghurt / Mala / Kefir batch fields
+  productType: { type: String, enum: PRODUCT_TYPES },
   milkLitres: Number,
 
   // DEPRECATED single-value fields — no longer written to by new batches,

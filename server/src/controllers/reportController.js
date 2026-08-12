@@ -3,6 +3,7 @@ const Production = require('../models/Production');
 const Ingredient = require('../models/Ingredient');
 const Packaging = require('../models/Packaging');
 const DailyStock = require('../models/DailyStock');
+const { PRODUCT_TYPES } = require('../config/productionConstants');
 const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit');
 
@@ -29,7 +30,7 @@ exports.getSummaryReport = async (req, res) => {
     const format = formatMap[period] || formatMap.daily;
 
     const summary = await Production.aggregate([
-      { $match: { productType: { $in: ['Yoghurt', 'Mala'] } } },
+      { $match: { productType: { $in: PRODUCT_TYPES } } },
       { $group: {
           _id: { period: { $dateToString: { format, date: '$date' } }, productType: '$productType' },
           milkLitres: { $sum: '$milkLitres' },
@@ -104,7 +105,7 @@ async function getExportDataset(type, query) {
     const formatMap = { daily: '%Y-%m-%d', weekly: '%Y-%U', monthly: '%Y-%m' };
     const format = formatMap[period] || formatMap.daily;
     const rows = await Production.aggregate([
-      { $match: { productType: { $in: ['Yoghurt', 'Mala'] } } },
+      { $match: { productType: { $in: PRODUCT_TYPES } } },
       { $group: {
           _id: { period: { $dateToString: { format, date: '$date' } }, productType: '$productType' },
           milkLitres: { $sum: '$milkLitres' },

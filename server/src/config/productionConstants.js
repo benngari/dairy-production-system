@@ -11,6 +11,10 @@ module.exports = {
   CONSUMABLES_PERCENT: 0.05,
   FLAVOUR_ML_PER_15L: 5,
   COLOUR_ML_PER_15L: 15,
+  // Single list every controller/model imports instead of hardcoding
+  // ['Yoghurt', 'Mala'] in a dozen places — adding a future 4th product
+  // only means changing this one line.
+  PRODUCT_TYPES: ['Yoghurt', 'Mala', 'Kefir'],
   FLAVOUR_COLOUR_MAP: {
     'Mango': 'Annatto Colour',
     'Strawberry': 'Red Beet Colour',

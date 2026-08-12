@@ -4,10 +4,11 @@ import toast from 'react-hot-toast';
 
 const YOGHURT_SIZES = ['500ml', '1L', '2L', '3L', '5L'];
 const MALA_SIZES = ['500ml', '1L', '2L', '3L', '5L'];
+const KEFIR_SIZES = ['500ml', '1L', '2L', '3L', '5L'];
 
 const Settings = () => {
   const [settings, setSettings] = useState({
-    sellingPrices: { yoghurt: {}, mala: {} }
+    sellingPrices: { yoghurt: {}, mala: {}, kefir: {} }
   });
 
   useEffect(() => {
@@ -89,7 +90,7 @@ const Settings = () => {
             className="border p-2 rounded w-full"
           />
           <p className="text-xs text-gray-500 mt-1">
-            Flat labour cost added to every Yoghurt/Mala batch, regardless of size.
+            Flat labour cost added to every batch, regardless of product or size.
           </p>
         </div>
 
@@ -113,7 +114,7 @@ const Settings = () => {
 
         <div>
           <h3 className="font-semibold mb-2">Mala Selling Prices (KSh)</h3>
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-5 gap-2">
             {MALA_SIZES.map(size => (
               <div key={size}>
                 <label className="block text-xs text-gray-500">{size}</label>
@@ -130,7 +131,25 @@ const Settings = () => {
           <p className="text-xs text-gray-500 mt-1">2L prices are left blank until the client confirms them.</p>
         </div>
 
-        
+        <div>
+          <h3 className="font-semibold mb-2">Kefir Selling Prices (KSh)</h3>
+          <div className="grid grid-cols-5 gap-2">
+            {KEFIR_SIZES.map(size => (
+              <div key={size}>
+                <label className="block text-xs text-gray-500">{size}</label>
+                <input
+                  type="number"
+                  value={settings.sellingPrices?.kefir?.[size] ?? ''}
+                  onChange={(e) => handlePriceChange('kefir', size, e.target.value)}
+                  placeholder="TBD"
+                  className="border p-2 rounded w-full"
+                />
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-gray-500 mt-1">All Kefir prices start blank until you set them here.</p>
+        </div>
+
         <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded">Save Settings</button>
       </form>
     </div>

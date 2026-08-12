@@ -1,8 +1,9 @@
 const DailyStock = require('../models/DailyStock');
 const Settings = require('../models/Settings');
 const { logAction } = require('../utils/auditLog');
+const { PRODUCT_TYPES } = require('../config/productionConstants');
 
-const PRODUCTS = ['Yoghurt', 'Mala'];
+const PRODUCTS = PRODUCT_TYPES;
 const SIZES = ['500ml', '1L', '2L', '3L', '5L'];
 
 function normalizeDate(dateStr) {
@@ -23,7 +24,7 @@ exports.getDailyStock = async (req, res) => {
     for (const productType of PRODUCTS) {
       for (const size of SIZES) {
         let record = await DailyStock.findOne({ date, productType, size, isDeleted: { $ne: true } });
-        const priceTable = productType === 'Yoghurt' ? settings.sellingPrices?.yoghurt : settings.sellingPrices?.mala;
+        const priceTable = settings.sellingPrices?.[productType.toLowerCase()];
         const currentPrice = priceTable?.[size] || 0;
 
         if (!record) {

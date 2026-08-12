@@ -19,12 +19,10 @@ const {
   FLAVOUR_ML_PER_15L,
   COLOUR_ML_PER_15L,
   FLAVOUR_COLOUR_MAP,
-  BOTTLE_LITRES
+  BOTTLE_LITRES,
+  PRODUCT_TYPES
 } = require('../config/productionConstants');
 
-// Look up an ingredient's unit cost by (partial, case-insensitive) name match.
-// Returns 0 if not found, so a batch can still be calculated even if the
-// ingredient hasn't been added to Inventory yet.
 async function findIngredientCost(nameFragment) {
   if (!nameFragment) return 0;
   const ing = await Ingredient.findOne({ name: new RegExp(nameFragment, 'i') });
@@ -32,21 +30,20 @@ async function findIngredientCost(nameFragment) {
 }
 
 async function computeBatchBreakdown({ productType, milkLitres, flavours = [], colours = [] }, settings) {
-  if (!['Yoghurt', 'Mala'].includes(productType)) {
-    throw new Error('productType must be "Yoghurt" or "Mala"');
+  if (!PRODUCT_TYPES.includes(productType)) {
+    throw new Error(`productType must be one of: ${PRODUCT_TYPES.join(', ')}`);
   }
   if (!milkLitres || milkLitres <= 0) {
     throw new Error('milkLitres must be a positive number');
   }
-  if (productType === 'Mala' && (flavours.length > 0 || colours.length > 0)) {
-    throw new Error('Mala only uses Culture — flavours and colours are not applicable');
+  if ((productType === 'Mala' || productType === 'Kefir') && (flavours.length > 0 || colours.length > 0)) {
+    throw new Error(`${productType} does not use flavours or colours`);
   }
 
   const labour = settings.labourCostPerBatch ?? LABOUR_PER_BATCH;
   const milkCost = milkLitres * MILK_COST_PER_LITRE;
 
-  // Sugar, Starch, and Pectin are only used in Yoghurt production — Mala
-  // uses just Milk, Culture, Labour, and Consumables.
+  // Sugar, Starch, and Pectin are only used in Yoghurt production.
   let sugarKg = 0, sugarCost = 0, starchGrams = 0, starchCost = 0, pectinGrams = 0, pectinCost = 0;
   if (productType === 'Yoghurt') {
     sugarKg = milkLitres * SUGAR_PERCENT_OF_MILK;
@@ -59,9 +56,13 @@ async function computeBatchBreakdown({ productType, milkLitres, flavours = [], c
     pectinCost = pectinGrams * PECTIN_COST_PER_GRAM;
   }
 
-  const cultureSachets = milkLitres / CULTURE_LITRES_PER_SACHET;
-  const cultureUnitCost = (await findIngredientCost('culture')) || settings.cultureCostPerSachet || 0;
-  const cultureCost = cultureSachets * cultureUnitCost;
+  // Kefir doesn't use Culture either — Yoghurt and Mala do.
+  let cultureSachets = 0, cultureCost = 0;
+  if (productType !== 'Kefir') {
+    cultureSachets = milkLitres / CULTURE_LITRES_PER_SACHET;
+    const cultureUnitCost = (await findIngredientCost('culture')) || settings.cultureCostPerSachet || 0;
+    cultureCost = cultureSachets * cultureUnitCost;
+  }
 
   const consumablesCost = CONSUMABLES_PERCENT * (labour + milkCost + sugarCost + starchCost + pectinCost);
 
@@ -106,9 +107,6 @@ async function computeBatchBreakdown({ productType, milkLitres, flavours = [], c
   };
 }
 
-// POST /api/production/calculate
-// Handles the Yoghurt/Mala batch calculator (productType present) AND
-// the original recipe-based calculator (recipeId present) — unchanged for old data.
 exports.calculateProduction = async (req, res) => {
   try {
     const { productType, milkLitres, flavours, colours, recipeId, mode, milkQuantity, desiredOutput } = req.body;
@@ -129,7 +127,6 @@ exports.calculateProduction = async (req, res) => {
       });
     }
 
-    // --- Legacy recipe-based calculation (unchanged) ---
     const recipe = await Recipe.findById(recipeId).populate('ingredients.ingredientId');
     if (!recipe) return res.status(404).json({ message: 'Recipe not found' });
 
@@ -192,9 +189,6 @@ exports.checkStore = async (req, res) => {
   }
 };
 
-// POST /api/production
-// Handles Yoghurt/Mala batch creation (with packaging + revenue + stock deductions
-// for multiple flavours/colours) AND the original recipe-based creation (unchanged).
 exports.createProduction = async (req, res) => {
   try {
     const { productType } = req.body;
@@ -207,7 +201,6 @@ exports.createProduction = async (req, res) => {
         settings
       );
 
-      // Deduct base ingredient stock where a matching inventory item exists (best-effort).
       const baseDeductions = [
         { fragment: 'sugar', qty: breakdown.sugarKg },
         { fragment: 'starch', qty: breakdown.starchGrams / 1000 },
@@ -226,7 +219,6 @@ exports.createProduction = async (req, res) => {
         }
       }
 
-      // Deduct stock for every selected flavour and colour individually.
       for (const f of breakdown.flavourUsage) {
         if (!f.ml) continue;
         const ing = await Ingredient.findOne({ name: new RegExp(`${f.name} Flavour`, 'i') });
@@ -248,8 +240,10 @@ exports.createProduction = async (req, res) => {
         }
       }
 
-      // Package the batch: deduct bottle stock, compute litres packaged & remaining, compute revenue.
-      const priceTable = productType === 'Yoghurt' ? settings.sellingPrices?.yoghurt : settings.sellingPrices?.mala;
+      // Price table lookup generalized by lowercasing productType instead of
+      // a hardcoded ternary — now scales to any product in PRODUCT_TYPES as
+      // long as its Settings.sellingPrices key matches (yoghurt/mala/kefir).
+      const priceTable = settings.sellingPrices?.[productType.toLowerCase()];
       let litresPackaged = 0;
       let totalRevenue = 0;
       let needsPricing = false;
@@ -335,11 +329,14 @@ exports.createProduction = async (req, res) => {
         user: req.user.name || req.user.email
       });
 
-      return res.status(201).json(production);
+      // FIX: this audit log call previously sat AFTER `return`, meaning batch
+      // creation was never actually being logged. Moved above the return so
+      // it actually executes.
       await logAction(req, { action: 'create', entityType: 'Production', entityId: production._id, entityLabel: `${productType} batch - ${milkLitres}L`, details: `Cost: KSh ${breakdown.totalBudgetCost.toFixed(2)}` });
+
+      return res.status(201).json(production);
     }
 
-    // --- Legacy recipe-based production creation (unchanged) ---
     const { recipeId, milkQuantity, producedQuantity, ingredientsUsed, packagingUsed, notes } = req.body;
     const recipe = await Recipe.findById(recipeId);
     if (!recipe) return res.status(404).json({ message: 'Recipe not found' });
@@ -416,17 +413,11 @@ exports.getProductionById = async (req, res) => {
   }
 };
 
-// DELETE /api/production/:id — Administrator only.
-// Reverses the batch: restores ingredient stock and bottle stock that were
-// deducted when it was recorded, then removes the Production and its
-// ProductionHistory entry. Legacy recipe-based records are handled the
-// same way via their own ingredientsUsed/packagingUsed arrays.
 exports.deleteProduction = async (req, res) => {
   try {
     const production = await Production.findById(req.params.id);
     if (!production) return res.status(404).json({ message: 'Production not found' });
 
-    // Restore ingredient stock (covers both new batch ingredientsUsed and legacy)
     for (const item of production.ingredientsUsed || []) {
       if (!item.ingredientId || !item.quantity) continue;
       const ing = await Ingredient.findById(item.ingredientId);
@@ -437,7 +428,6 @@ exports.deleteProduction = async (req, res) => {
       }
     }
 
-    // Restore bottle stock — new batches use `packaging`, legacy uses `packagingUsed`
     const packagingEntries = (production.packaging && production.packaging.length)
       ? production.packaging
       : (production.packagingUsed || []);
